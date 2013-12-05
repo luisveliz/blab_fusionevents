@@ -1,5 +1,8 @@
 package main;
 
+import event.Event;
+import event.EventEvaluator;
+import event.EventSet;
 import frequency.Histograms;
 import gui.GUIAbout;
 import gui.GUIMetrics;
@@ -12,7 +15,6 @@ import info.GlobalInfo;
 import java.util.ArrayList;
 
 import bTools.BNF;
-
 import loader.FileLoader;
 import overTime.OverTime;
 import particleTracker.ParticleTracker;
@@ -624,6 +626,37 @@ public class Thinker
 		return particleTracker;
 	}
 	/*-------------------------------------------------------------------------*/
+	
+	
+	
+	public void fusionEvents(){
+		
+		EventEvaluator ee = new EventEvaluator(this.particleTracker.getMovie().getImp(), 4, 15);
+		TrajSet trajSet = sets.get(selectedSetIndex);
+		
+		EventSet eventSet = new EventSet();
+		
+		for(int i=0; i< trajSet.getNumOfTrajs(); i++){
+			
+			Event event = ee.evaluate(trajSet.getTraj(i));
+			if(event!=null){
+				
+				eventSet.addEvent(event);
+				
+			}
+			
+			
+		}
+		
+		
+		
+		
+		
+		
+	}
+	
+	
+	
 	/*-------------------------------------------------------------------------*/
 	public void updateTrajectoryInfo() 
 	{

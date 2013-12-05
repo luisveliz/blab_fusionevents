@@ -229,7 +229,7 @@ public class ParticleTracker
 						nparticles[i] = movie.getFrame(i).getReal_particles_number();
 					}		
 					
-					Plot plot =  new Plot("Particles detection", "Frame", "N° of Particles", frames, nparticles);
+					Plot plot =  new Plot("Particles detection", "Frame", "Nï¿½ of Particles", frames, nparticles);
 					plot.show();
 					
 					/*-------------------------------*/
@@ -308,6 +308,20 @@ public class ParticleTracker
 					
 					gui.jButton_Linking_setEnabled(true);
 					gui.setVisible(false);
+					
+					
+					/******************************************************************/
+					System.out.println("Starting Fusion Events detection....");
+					
+					thinker.fusionEvents();
+					
+					
+					/******************************************************************/
+					
+					
+					
+					
+					
 					
 				}
 				catch(Exception e)
