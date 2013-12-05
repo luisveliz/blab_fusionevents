@@ -18,21 +18,20 @@ public class EventEvaluator{
 		
 	}
 	
-	public void evaluate(Trajectory traj){ //En primer lugar probaré trabajando con sólo el centroide (después incluir promedio)
+	public Event evaluate(Trajectory traj){ //En primer lugar probaré trabajando con sólo el centroide (después incluir promedio)
 		if (traj.getRadio() < limitRadius){
-			return;
+			return null;
 		}
 		double x=traj.getCentroide_X();//Duda: ¿puedo asumir que el centroide de la tray. es el centroide del FE?
 		double y=traj.getCentroide_Y();
 		int xEvent=(int)x;
 		int yEvent=(int)y;
 	
-		int delta=this.deltaWindow;
-		int Intensities[]=new int[2*delta];
+		int Intensities[]=new int[2*deltaWindow];
 		
 		int startTraj=traj.getMovieFrame();//Obtiene el primer frame donde se detecta la trayectoria (verificar)
-		int startFrame=startTraj-delta;
-		int endFrame=startTraj+delta;//Verificar límites de la película que no se sobrepasen
+		int startFrame=startTraj-deltaWindow;
+		int endFrame=startTraj+deltaWindow;//Verificar límites de la película que no se sobrepasen
 		ImageStack is=imp.getStack();
 		ImageProcessor ip;
 		
@@ -41,6 +40,7 @@ public class EventEvaluator{
 			Intensities[i-startFrame]=ip.getPixel(xEvent, yEvent);
 		}
 		
+		return null;//Solo puse esto para que dejase de arrojar error
 		
 		
 	}

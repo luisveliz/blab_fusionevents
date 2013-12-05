@@ -17,4 +17,25 @@ public class Event{
 		this.tmean=tmean;
 		
 	}
+	
+	public int getStart(){
+		return start;
+	}
+	
+	public int getEnd(){
+		return end;
+	}
+	
+	public int getAmplitude(){
+		return amplitude;
+	}
+	
+	public double getTau(){
+		return tau;
+	}
+	
+	public double getTMean(){
+		return tmean;
+	}
+	
 }
