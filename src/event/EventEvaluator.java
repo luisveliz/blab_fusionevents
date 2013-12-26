@@ -125,10 +125,23 @@ public class EventEvaluator{
 			y[i-startPos]=intensitiesWindow[i];
 		}
 		
-		//Code for calculate the mean intensity before (background) the maximum intensity
-		
+		//Objects needed to get intensities
 		ImageStack is=imp.getImageStack();
 		ImageProcessor ip;
+		
+		//Test code to plot every intensity along the movie
+		double completeX[]=new double[impEndFrame];
+		double completeY[]=new double[impEndFrame];
+		for (int c=0;c<impEndFrame;c++){
+			ip=is.getProcessor(c+1);
+			completeX[c]=c+1;
+			completeY[c]=ip.getPixel(pixelX, pixelY);
+		}
+		
+		//end of test code
+		
+		//Code for calculate the mean intensity before (background) the maximum intensity
+		
 		double background=0.0;
 		int bgFrames=0;
 		if (startFrame!=1){
@@ -167,19 +180,24 @@ public class EventEvaluator{
 			if (gof>0.5){
 				
 				//Code for proving if exponential adjust is working or not (plotting events' intensities)
-				PlotWindow.noGridLines = false; // draw grid lines
-		        Plot plot = new Plot("X= "+String.valueOf(pixelX)+" Y= "+String.valueOf(pixelY),"X Axis","Y Axis",x,y);
-		        plot.setLimits(0, impEndFrame, 0, 255);
-		        plot.setLineWidth(1);
-		        double yprueba[]=new double[x.length];
-		        for(int i=0;i<x.length;i++)
-				{
-					yprueba[i]=fit[1][i];
-				}
-		        plot.setColor(Color.red);
-		        plot.addPoints(x,yprueba,PlotWindow.X);
-		        plot.addPoints(x,yprueba,PlotWindow.LINE);
-		        plot.show();
+				double tau=-1/expParams[1];
+		        System.out.println("Tau: "+tau);
+		        if (tau<1){
+					PlotWindow.noGridLines = false; // draw grid lines
+			        Plot plot = new Plot("X= "+String.valueOf(pixelX)+" Y= "+String.valueOf(pixelY),"X Axis","Y Axis",completeX,completeY);
+			        plot.setLimits(0, impEndFrame, 0, 255);
+			        plot.setLineWidth(1);
+			        double yprueba[]=new double[x.length];
+			        for(int i=0;i<x.length;i++)
+					{
+						yprueba[i]=fit[1][i];
+					}
+			        plot.setColor(Color.red);
+			        plot.addPoints(x,yprueba,PlotWindow.X);
+			        plot.addPoints(x,yprueba,PlotWindow.LINE);
+			        plot.show();
+		        }
+		        
 		        //end of plotting code
 			}
 			//if(gof>0.3){
