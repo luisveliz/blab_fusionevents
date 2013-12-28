@@ -647,11 +647,11 @@ public class Thinker
 	
 	public void fusionEvents(){
 		
-		EventEvaluator ee = new EventEvaluator(this.particleTracker.getMovie().getImp(), 4, 20);
+		EventEvaluator ee = new EventEvaluator(this.particleTracker.getMovie().getImp(), 4, 15);
 		TrajSet trajSet = sets.get(selectedSetIndex);
 		
 		EventSet eventSet = new EventSet();
-		
+		System.out.println("Number of trajs: "+trajSet.getNumOfTrajs());
 		for(int i=0; i< trajSet.getNumOfTrajs(); i++){
 			
 			Event event = ee.evaluate(trajSet.getTraj(i));
