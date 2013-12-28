@@ -155,6 +155,7 @@ public class GUImain extends JFrame
 	private JPanel panel_3;
 	private JMenuItem mntmDirection;
 	private Action action;
+	private JMenuItem jMenuItem_FusionEvents;
 
 	/**
 	 * This is the default constructor
@@ -1299,7 +1300,7 @@ public class GUImain extends JFrame
 			titledBorder8.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
 			jPanel_Manual_Trajectories = new JPanel();
 			jPanel_Manual_Trajectories.setPreferredSize(new Dimension(100, 250));
-			jPanel_Manual_Trajectories.setBorder(new TitledBorder(new EmptyBorder(0, 0, 0, 0), "Trajectories", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+			jPanel_Manual_Trajectories.setBorder(new TitledBorder(new EmptyBorder(0, 0, 0, 0), "Events", TitledBorder.LEADING, TitledBorder.TOP, null, null));
 			GridBagLayout gbl_jPanel_Manual_Trajectories = new GridBagLayout();
 			gbl_jPanel_Manual_Trajectories.columnWidths = new int[]{25, 0};
 			gbl_jPanel_Manual_Trajectories.rowHeights = new int[]{80, 0};
@@ -1506,6 +1507,7 @@ public class GUImain extends JFrame
 			jMenu.add(getJMenuItem11());
 			jMenu.add(getJMenuItem14());
 			jMenu.add(getMntmDirection());
+			jMenu.add(getJMenuItem_FusionEvents());
 		}
 		return jMenu;
 	}
@@ -2112,5 +2114,16 @@ public class GUImain extends JFrame
 			action = new SwingAction();
 		}
 		return action;
+	}
+	private JMenuItem getJMenuItem_FusionEvents() {
+		if (jMenuItem_FusionEvents == null) {
+			jMenuItem_FusionEvents = new JMenuItem("Fusion Events");
+			jMenuItem_FusionEvents.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					thinker.jMenu_FusionEvents();
+				}
+			});
+		}
+		return jMenuItem_FusionEvents;
 	}
 }  //  @jve:decl-index=0:visual-constraint="10,9"
