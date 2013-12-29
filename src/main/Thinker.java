@@ -3,6 +3,7 @@ package main;
 import event.Event;
 import event.EventEvaluator;
 import event.EventSet;
+import event.FusionEvents;
 import frequency.Histograms;
 import gui.GUIAbout;
 import gui.GUIMetrics;
@@ -63,6 +64,8 @@ public class Thinker
 	private OverTime overTime;
 	private Histograms histograms;
 	private Direction direction;
+	
+	private FusionEvents fusionEvents;
 	
 	//Status
 	public boolean trajTableLastClicked=true;
@@ -279,11 +282,16 @@ public class Thinker
 		if(direction!=null)
 			direction.openGUI();
 		else
-			direction= new Direction(this);
+			direction = new Direction(this);
 		direction.updateDirectionChart();
 	}
 	public void jMenu_FusionEvents(){
-		
+		if(fusionEvents!=null){
+			fusionEvents.openGUI();
+		}
+		else{
+			fusionEvents = new FusionEvents(this);
+		}
 	}
 	
 	/*------------------------------------------------------------*/
@@ -643,7 +651,7 @@ public class Thinker
 	}
 	/*-------------------------------------------------------------------------*/
 	
-	
+	/*
 	
 	public void fusionEvents(){
 		
@@ -669,7 +677,7 @@ public class Thinker
 		
 		
 		
-	}
+	}*/
 	
 	
 	

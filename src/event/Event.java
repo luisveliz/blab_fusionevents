@@ -2,6 +2,8 @@ package event;
 
 public class Event{
 	
+	private int id;
+	
 	private double eventRadius;//Duda: este es el radio de la trayectoria, o de la particula(zona) donde ocurre la fusion
 	private int start;
 	private int end;
@@ -17,6 +19,9 @@ public class Event{
 		this.tau=tau;
 		this.tmean=tmean;
 		
+	}
+	public int getId(){
+		return id;
 	}
 	
 	public int getStart(){

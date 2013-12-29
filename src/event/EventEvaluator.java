@@ -254,6 +254,7 @@ public class EventEvaluator{
 			    System.out.println("gof "+gof);
 				
 			    //To do: eventRadius and T mean (actually they are initialized in 0)
+			    System.out.println("RETORNANDO EVENTOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO");
 				Event eventTested=new Event(0,startPos+startFrame,endPos+startFrame,expParams[0],expParams[1],0);
 				return eventTested;
 					
