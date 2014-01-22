@@ -23,7 +23,7 @@ public class Trajectory
 	
 	int movieFrame;		 					// the first trajectorie frame, related to the movie.
 	private Particle[] particles;			// N
-	private Particle[] particlesPro;		// F, incluye partículas fantasmas (-1,-1) para los gaps
+	private Particle[] particlesPro;		// F, incluye partï¿½culas fantasmas (-1,-1) para los gaps
 	
 	private int[] frames;             		// N, the frames relative to the trajectory, not to the movie, always begin with 1.
 	private int[] framesPro;				// F, contains 0's in the gaps.
@@ -33,7 +33,7 @@ public class Trajectory
 
 	
 	
-	//TODO fix this: length is not necessary beacuse length = last trajectoryFrame
+	//TODO fix this: get is not necessary beacuse length = last trajectoryFrame
 	private int length;						// number of frames this trajectory spans on last frame	
 	
 	int numOfGaps;

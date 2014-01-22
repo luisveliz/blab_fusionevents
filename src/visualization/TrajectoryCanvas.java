@@ -13,6 +13,8 @@ import java.awt.Image;
 import java.awt.RenderingHints;
 
 import data.Trajectory;
+import event.Event;
+import event.EventSet;
 
 
 
@@ -29,6 +31,10 @@ public class TrajectoryCanvas extends ImageCanvas
 	Roi focus_area[];
 	int lastFrame;
 	boolean showAllTrajs;
+	
+	//código Jordan
+	public boolean showEvents;
+	public EventSet Events;//id,x,y,xradius,yradius
     
 	private static final long serialVersionUID = 1L;
 	
@@ -112,7 +118,7 @@ public class TrajectoryCanvas extends ImageCanvas
 			int focus_y = Math.max((int)min_x - 8, 0);
 			int focus_height = (int)max_x - focus_y + 8;
 			int focus_width = (int)max_y - focus_x + 8;			
-			// make sure that the -8 or +8 didn�t create an ROI with bounds outside of the window
+			// make sure that the -8 or +8 didn�t create an ROI with bounds outside of the window
 			//if (focus_x + focus_width > original_imp.getWidth()) 
 			if (focus_x + focus_width > this.imageWidth)
 			{
@@ -155,7 +161,14 @@ public class TrajectoryCanvas extends ImageCanvas
 	 */
 	public void paint(Graphics g) {            
 		super.paint(g);
-		drawTrajectories((Graphics2D)g); 
+		drawTrajectories((Graphics2D)g);
+		if (showEvents){
+			Event aux;
+			for (int i=0;i<Events.getNumberOfEvents();i++){
+				aux=Events.getEvent(i);
+				drawEvent((Graphics2D)g,aux.getCenterX(),aux.getCenterY(),aux.getRadiusX(),aux.getRadiusY(),Color.RED);
+			}
+		}
 	}
 	
 	/**
@@ -224,4 +237,16 @@ public class TrajectoryCanvas extends ImageCanvas
 		this.trajIndexSelected = index;
 		repaint();
 	}
+	
+	
+	//Código agregado por Jordan
+	public void drawEvent(Graphics2D g2D, int x, int y, double xradius, double yradius, Color color){
+		//int xradiusInt=(int)xradius;
+		//int yradiusInt=(int)yradius;
+		g2D.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+		g2D.setColor(color);
+		System.out.println("Coordenadas centro: "+Double.toString(x-xradius)+" "+Double.toString(y-yradius));
+		g2D.drawOval(this.screenXD(x-xradius), this.screenYD(y-yradius), (int) (2*xradius*this.magnification)+1, (int) (2*yradius*this.magnification)+1);
+	}
+	//fin de código agregado por Jordan
 }

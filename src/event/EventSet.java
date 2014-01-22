@@ -10,16 +10,19 @@ public class EventSet{
 	private double averageAmplitude;
 	private double averageTau;
 	private double averageTMean;
+	private int nEvents;
 	
 	public EventSet(){
-		this.events=new ArrayList<Event>();
-		this.averageAmplitude=0;
-		this.averageTau=0.0;
-		this.averageTMean=0.0;
+		events=new ArrayList<Event>();
+		averageAmplitude=0;
+		averageTau=0.0;
+		averageTMean=0.0;
+		nEvents=0;
 	}
 	
 	public void addEvent(Event event){
 		events.add(event);
+		nEvents++;
 	}
 	
 	public double getAvgTau(){
@@ -49,6 +52,14 @@ public class EventSet{
 	
 	void updateAvgTMean(){
 		
+	}
+	
+	public int getNumberOfEvents(){
+		return nEvents;
+	}
+	
+	public Event getEvent(int index){
+		return events.get(index);
 	}
 	
 	

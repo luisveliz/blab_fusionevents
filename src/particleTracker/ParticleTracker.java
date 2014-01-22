@@ -17,6 +17,7 @@ import data.Metrics;
 import data.Movie;
 import data.TrajSet;
 import data.Trajectory;
+import event.EventSet;
 
 public class ParticleTracker 
 {
@@ -410,4 +411,15 @@ public class ParticleTracker
 	public Movie getMovie() {
 		return movie;
 	}
+	
+	//Código agregado por Jordan
+	public void changeShowEvents(){
+		if (!tc.showEvents) tc.showEvents=true;
+	}
+	
+	public void addEventsToCanvas(EventSet events){
+		tc.Events=events;
+	}
+	//fin código agregado por Jordan
+
 }
