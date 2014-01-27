@@ -91,6 +91,32 @@ public final class LMauthor
 		return sum;
 	} //chiSquared
 
+	public static double rSquared(double[][] x, double[] a, double[] y, double[] s, LMfunc f){
+		int npts = y.length;
+		double ssres = 0.;
+
+		for(int i = 0; i < npts; i++ ) 
+		{
+			double d1 = y[i] - f.val(x[i], a);
+			ssres = ssres + (d1*d1);
+		}
+		//Average
+		double avg=0.;
+		for(int j=0; j < npts;j++)
+		{
+			avg=avg+y[j];
+		}
+		avg=avg/npts;
+		
+		double sstot=0.;
+		for(int k=0;k<npts;k++)
+		{
+			double d2= y[k] - avg;
+			sstot = sstot+ (d2*d2);
+			
+		}
+		return 1.-(ssres/sstot);
+	}
 
 	/**
 	 * Minimize E = sum {(y[k] - f(x[k],a)) / s[k]}^2

@@ -21,6 +21,8 @@ import ij.gui.StackWindow;
 import ij.measure.CurveFitter;
 import ij.process.ImageProcessor;
 
+import java.io.*;
+
 public class EventEvaluator{
 	
 	private ImagePlus imp;
@@ -360,7 +362,7 @@ public class EventEvaluator{
 			{
 				fit[0][i] = x[i];
 				fit[1][i] = checker.f(expParams, x[i]);
-				System.out.println("Exp: x->"+fit[0][i]+" y->"+fit[1][i]);
+				//System.out.println("Exp: x->"+fit[0][i]+" y->"+fit[1][i]);
 			}
 			double tau=-1/expParams[1];
 			double amplitude=expParams[0];
@@ -397,60 +399,84 @@ public class EventEvaluator{
 					
 				    
 	
-				    int patchSize=5;//Customizable variable by the user
+				    int patchSize=6;//Customizable variable by the user
 				    
-				    int x1Patch=centerX-patchSize;
-				    int x2Patch=centerX+patchSize;
-				    int y1Patch=centerY-patchSize;
-				    int y2Patch=centerY+patchSize;
 				    
-				    if (x1Patch<0) x1Patch=0;
-					if (y1Patch<0) y1Patch=0;
-					if (x2Patch>=imp.getWidth()){
-						x2Patch=imp.getWidth()-1;
-					}
-					if (y2Patch>=imp.getHeight()){
-						y2Patch=imp.getHeight()-1;
-					}
 				    
 					ImageStack is=imp.getImageStack();
-					ImageProcessor ip=is.getProcessor(startPos+1);
+					double [] aguess=new double[6];
+					try{
+						FileWriter fstream = new FileWriter("out.txt",true);
+						PrintWriter out = new PrintWriter(fstream);
+						//Codigo de prueba para ver como arreglar lo de "Matrix is singular" en el ajuste
+						int testLimit=startPos+3;
+						if (testLimit>=smoothSlopeY.length) testLimit=smoothSlopeY.length-1;
+						//fin codigo
+						for (int aux=startPos+1;aux<=testLimit;aux++){
+							ImageProcessor ip=is.getProcessor(aux);
+							
+							int x1Patch=centerX-patchSize;
+						    int x2Patch=centerX+patchSize;
+						    int y1Patch=centerY-patchSize;
+						    int y2Patch=centerY+patchSize;
+						    
+						    if (x1Patch<0) x1Patch=0;
+							if (y1Patch<0) y1Patch=0;
+							if (x2Patch>=imp.getWidth()){
+								x2Patch=imp.getWidth()-1;
+							}
+							if (y2Patch>=imp.getHeight()){
+								y2Patch=imp.getHeight()-1;
+							}
+							
+							int npts=(x2Patch-x1Patch+1)*(y2Patch-y1Patch+1);
+							double intensitiesPatch[]=new double [npts];
+							double patchXY[][]=new double[npts][2];
+							
+							int c=0;
+						    for (int xi=x1Patch;xi<=x2Patch;xi++){
+						    	for (int yi=y1Patch;yi<=y2Patch;yi++){
+						    		intensitiesPatch[c]=ip.getPixel(xi, yi);
+						    		patchXY[c][0]=xi;
+						    		patchXY[c][1]=yi;
+						    		c++;
+						    	}
+						    }
+						    
+						    System.out.println("Intensidades patch frame: "+aux+" centerX:"+centerX+" centerY:"+centerY);
+						    for (int u=0;u<intensitiesPatch.length;u++){
+						    	System.out.print(intensitiesPatch[u]+",");
+						    }
+						    
+						    int amp=ip.getPixel(centerX,centerY);
+						    LMfunc f=new Gauss2dImproved(patchXY,intensitiesPatch,amp-background,centerX,centerY,1.0,1.0,background);
+						    
+						    aguess = f.initial();
+						    Object[] test = f.testdata(npts);
+						    double[] s= (double[]) test[3];//Weights' matrix
+						    boolean[] vary = new boolean[aguess.length];
+						    for( int i = 0; i < aguess.length; i++ ) vary[i] = true;
+		
+						    try {
+						      LMauthor.solve( patchXY, aguess, intensitiesPatch, s, vary, f, 0.001, 0.01, 100, 2);
+						    }
+						    catch(Exception ex) {
+						      System.err.println("Exception caught: " + ex.getMessage());
+						      System.exit(1);
+						    }
+						    System.out.println("Frame aux: "+aux+" Sigmax: "+aguess[0]+" Sigmay: "+aguess[1]+" x0: "+(int)(aguess[2]+0.5)+" y0: "+(int)(aguess[3]+0.5)+" b: "+aguess[4]+" amp: "+aguess[5]);
+						    out.println("Traj "+traj.getId()+"Frame aux: "+aux+" Sigmax: "+aguess[0]+" Sigmay: "+aguess[1]+" x0: "+(int)(aguess[2]+0.5)+" y0: "+(int)(aguess[3]+0.5)+" b: "+aguess[4]+" amp: "+aguess[5]);
+						    out.println("Chi square: "+LMauthor.chiSquared(patchXY, aguess, intensitiesPatch, s, f));
+						    out.println("R2: "+LMauthor.rSquared(patchXY, aguess, intensitiesPatch, s, f));
+						    centerX=(int)(aguess[2]+0.5);
+						    centerY=(int)(aguess[3]+0.5);
+						    //amp=(int)aguess[5];
+						}
+						out.close();
+					}catch(Exception e){
+						System.err.println("Error: " + e.getMessage());
+					}
 					
-					int npts=((2*patchSize)+1)*((2*patchSize)+1);
-					double intensitiesPatch[]=new double [npts];
-					double patchXY[][]=new double[npts][2];
-					
-					int c=0;
-				    for (int xi=x1Patch;xi<=x2Patch;xi++){
-				    	for (int yi=y1Patch;yi<=y2Patch;yi++){
-				    		intensitiesPatch[c]=ip.getPixel(xi, yi);
-				    		patchXY[c][0]=xi;
-				    		patchXY[c][1]=yi;
-				    		c++;
-				    	}
-				    }
-				    
-				    System.out.println("Intensidades patch centerX:"+centerX+" centerY:"+centerY);
-				    for (int u=0;u<intensitiesPatch.length;u++){
-				    	System.out.print(intensitiesPatch[u]+",");
-				    }
-				    
-				    int amp=ip.getPixel(centerX,centerY);
-				    LMfunc f=new Gauss2dImproved(patchXY,intensitiesPatch,amp-background,centerX,centerY,1.0,1.0,background);
-				    
-				    double[] aguess = f.initial();
-				    Object[] test = f.testdata(npts);
-				    double[] s= (double[]) test[3];//Weights' matrix
-				    boolean[] vary = new boolean[aguess.length];
-				    for( int i = 0; i < aguess.length; i++ ) vary[i] = true;
-
-				    try {
-				      LMauthor.solve( patchXY, aguess, intensitiesPatch, s, vary, f, 0.001, 0.01, 1000, 2);
-				    }
-				    catch(Exception ex) {
-				      System.err.println("Exception caught: " + ex.getMessage());
-				      System.exit(1);
-				    }
 				  //Code for testing graphically if the filtering is working
 					PlotWindow.noGridLines = false;
 				    //Plot plot = new Plot("Trajectory: "+traj.getId(),"X Axis","Y Axis",completeX,completeY);
@@ -473,7 +499,7 @@ public class EventEvaluator{
 				    plot2.drawLine(1, background, impEndFrame, background);;
 				    plot2.show();
 				    //end of testing code
-				    System.out.println("Sigmax: "+aguess[0]+" Sigmay: "+aguess[1]+" x0: "+(int)(aguess[2]+0.5)+" y0: "+(int)(aguess[3]+0.5)+" b: "+aguess[4]+" amp: "+aguess[5]);
+				    //System.out.println("Sigmax: "+aguess[0]+" Sigmay: "+aguess[1]+" x0: "+(int)(aguess[2]+0.5)+" y0: "+(int)(aguess[3]+0.5)+" b: "+aguess[4]+" amp: "+aguess[5]);
 				
 					
 				    //To do: eventRadius and T mean (actually they are initialized in 0)
@@ -533,7 +559,7 @@ public class EventEvaluator{
 			numPixels=getAreaSize(xmin,xmax,ymin,ymax);
 			
 			intensities[i-1]=getAreaIntensity(is,i,xmin,xmax,ymin,ymax,numPixels);
-			System.out.println("i: "+i+" (x,y)=("+xEvent+","+yEvent+"): "+intensities[i-1]);
+			//System.out.println("i: "+i+" (x,y)=("+xEvent+","+yEvent+"): "+intensities[i-1]);
 		}	
 	}
 	
