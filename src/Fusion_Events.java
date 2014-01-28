@@ -37,9 +37,9 @@ public class Fusion_Events implements PlugInFilter
 				IJ.showMessage("Error", "This plugin works with 1 channel Image Stacks of 1 slice and N frames or 1 frame and n slices.\n" +
 						"Please check your image:" +
 						"\nDimension:"+imp.getNDimensions()+
-						"\nN� Channels:"+imp.getNChannels()+
-						"\nN� Frames:"+imp.getNFrames()+
-						"\nN� Slices:"+imp.getNSlices()+
+						"\nN° Channels:"+imp.getNChannels()+
+						"\nN° Frames:"+imp.getNFrames()+
+						"\nN° Slices:"+imp.getNSlices()+
 						"\nStack Size:"+imp.getStackSize());
 			}
 		}

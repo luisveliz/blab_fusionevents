@@ -312,9 +312,10 @@ public class ParticleTracker
 					
 					
 					/******************************************************************/
-					System.out.println("Starting Fusion Events detection....");
+					/* Moved to FusionEvents.java
+					/*System.out.println("Starting Fusion Events detection....");
 					
-					thinker.fusionEvents();
+					thinker.fusionEvents();*/
 					
 					
 					/******************************************************************/

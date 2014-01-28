@@ -146,26 +146,26 @@ public class Trajectory
 //		System.out.println("calculateRadio");
 		calculateRadio();
 //		System.out.println("calculateDisplacement");
-		calculateDisplacements();
+		//calculateDisplacements();
 //		System.out.println("calculateVelocity");
-		calculateVelocity();
+		//calculateVelocity();
 //		System.out.println("calculateVectors");
-		calculateVectors();
+		//calculateVectors();
 //		System.out.println("calculateAngles");
-		calculateAngles();
+		//calculateAngles();
 		
 //		System.out.println("calculateTimeLag");
-		calculateTimeLag();
+		//calculateTimeLag();
 //		System.out.println("calculateMSD");
-		calculateMSD();
+		//calculateMSD();
 //		System.out.println("calculateMicroD");
-		microD12 = calculateMicroD(1,2);
+		//microD12 = calculateMicroD(1,2);
 //		System.out.println("calculateMacroD");
-		calculateMacroD();
-		System.out.println("calculateVarianza");
-		calculateMSDVariance();
-		System.out.println("calculateMicroDW");
-		calculateMicroDW();
+		//calculateMacroD();
+		//System.out.println("calculateVarianza");
+		//calculateMSDVariance();
+		//System.out.println("calculateMicroDW");
+		//calculateMicroDW();
 		subtrajs = new ArrayList<Subtrajectory>();
 		
 	}
@@ -174,7 +174,7 @@ public class Trajectory
 		this.time = metrics.framesToTime(frames);
 		calculateRadio();
 		calculateDisplacements();
-		calculateVelocity();
+		/*calculateVelocity();
 		calculateVectors();
 		calculateAngles();
 		calculateTimeLag();
@@ -182,7 +182,7 @@ public class Trajectory
 		microD12 = calculateMicroD(1,2);
 		calculateMacroD();
 		calculateMSDVariance();
-		calculateMicroDW();
+		calculateMicroDW();*/
 	}
 	
 	private void calculateParticlePro()
@@ -1056,4 +1056,32 @@ public class Trajectory
 	{
 		return usability;
 	}
+ 	
+ 	
+ 	
+ 	
+ 	
+ 	
+ 	
+ 	
+ 	
+ 	
+ 	
+ 	
+ 	
+ 	
+ 	
+ 	
+ 	
+ 	
+ 	
+ 	
+ 	
+ 	
+ 	
+ 	
+ 	
+ 	
+ 	
+ 	
 }

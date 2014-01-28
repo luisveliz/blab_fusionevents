@@ -362,7 +362,7 @@ public class ParticleLinker
 					// Create the current trajectory
 					
 					//System.out.println("Creando trayectoria: "+number_of_trajectories);
-					if(curr_traj_particles.size()>4)//TODO no olvidar esto!!!!
+					if(curr_traj_particles.size()>1)//TODO no olvidar esto!!!!
 					{
 						n_trajs_considered++;
 						IJ.log("Creando trayectoria: "+n_trajs_considered);

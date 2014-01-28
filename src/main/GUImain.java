@@ -155,6 +155,7 @@ public class GUImain extends JFrame
 	private JPanel panel_3;
 	private JMenuItem mntmDirection;
 	private Action action;
+	private JMenuItem jMenuItem_FusionEvents;
 
 	/**
 	 * This is the default constructor
@@ -1506,6 +1507,7 @@ public class GUImain extends JFrame
 			jMenu.add(getJMenuItem11());
 			jMenu.add(getJMenuItem14());
 			jMenu.add(getMntmDirection());
+			jMenu.add(getJMenuItem_FusionEvents());
 		}
 		return jMenu;
 	}
@@ -2112,5 +2114,16 @@ public class GUImain extends JFrame
 			action = new SwingAction();
 		}
 		return action;
+	}
+	private JMenuItem getJMenuItem_FusionEvents() {
+		if (jMenuItem_FusionEvents == null) {
+			jMenuItem_FusionEvents = new JMenuItem("Fusion Events");
+			jMenuItem_FusionEvents.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					thinker.jMenu_FusionEvents();
+				}
+			});
+		}
+		return jMenuItem_FusionEvents;
 	}
 }  //  @jve:decl-index=0:visual-constraint="10,9"

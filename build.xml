@@ -8,7 +8,7 @@
 	<property name="pluginsDir"  location="$basedir/../../ImageJ/plugins/"/>
 	
 	
-	<property name="user.name" value="Luis"/>
+	<property name="user.name" value="Jordan"/>
 	
 	<target name="main" depends="compress" description="Main target">
 		<echo>Building the .jar file.</echo>

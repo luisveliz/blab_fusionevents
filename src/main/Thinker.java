@@ -3,6 +3,7 @@ package main;
 import event.Event;
 import event.EventEvaluator;
 import event.EventSet;
+import event.FusionEvents;
 import frequency.Histograms;
 import gui.GUIAbout;
 import gui.GUIMetrics;
@@ -10,6 +11,8 @@ import gui.GUIPreferences;
 import ij.IJ;
 import ij.ImageJ;
 import ij.ImagePlus;
+import ij.gui.Plot;
+import ij.gui.PlotWindow;
 import info.GlobalInfo;
 
 import java.util.ArrayList;
@@ -29,6 +32,9 @@ import direction.Direction;
 
 public class Thinker 
 {
+	
+	Plot plot;
+	
 	//GUI
 	public GUImain gui;
 	private GUIPreferences gui_preferences;
@@ -58,6 +64,8 @@ public class Thinker
 	private OverTime overTime;
 	private Histograms histograms;
 	private Direction direction;
+	
+	private FusionEvents fusionEvents;
 	
 	//Status
 	public boolean trajTableLastClicked=true;
@@ -274,8 +282,16 @@ public class Thinker
 		if(direction!=null)
 			direction.openGUI();
 		else
-			direction= new Direction(this);
+			direction = new Direction(this);
 		direction.updateDirectionChart();
+	}
+	public void jMenu_FusionEvents(){
+		if(fusionEvents!=null){
+			fusionEvents.openGUI();
+		}
+		else{
+			fusionEvents = new FusionEvents(this);
+		}
 	}
 	
 	/*------------------------------------------------------------*/
@@ -309,6 +325,14 @@ public class Thinker
 		}
 		
 		updateAnalysis();
+		
+		
+		/************************************************/
+		plotIntensities();
+		
+		
+		
+		/************************************************/
 	}
 	public void jTable_SubtrajectoriesTable_clicked()
 	{				
@@ -627,7 +651,7 @@ public class Thinker
 	}
 	/*-------------------------------------------------------------------------*/
 	
-	
+	/*
 	
 	public void fusionEvents(){
 		
@@ -658,7 +682,7 @@ public class Thinker
 		
 		
 		
-	}
+	}*/
 	
 	
 	
@@ -747,5 +771,73 @@ public class Thinker
 	{
 		this.trajsFromXML = bool;
 	}
+	
+	
+	
+	
+/*********************************************************/
+ 	
+ 	public void plotIntensities(){
+ 		
+ 		int x = ((Double)getSelectedTraj().getCentroide_X()).intValue();
+ 		int y = ((Double)getSelectedTraj().getCentroide_Y()).intValue();
+ 		
+ 		
+ 		Frame[] frames = particleTracker.getMovie().getFrames();
+ 		
+ 		
+ 		double[] intensities = new double[frames.length];
+ 		double[] time = new double[intensities.length];
+ 		
+ 		
+ 		double intensitySum = 0;
+ 		
+ 		
+ 		
+ 		for(int f=0;f<intensities.length;f++){
+ 			intensitySum = 0;
+ 			for(int i = 0; i < 3;i++){
+ 	 			for(int j = 0; j < 3; j++){
+ 	 				intensitySum += frames[f].getOriginal_ip().getPixelValue(y, x);
+ 	 			}
+ 	 		}
+ 	 		intensities[f] = intensitySum/9;
+ 	 		time[f] = f+1;
+ 		}
+ 		
+ 		 PlotWindow.noGridLines = false; // draw grid lines
+         plot = new Plot("Example Plot","frame","intensity",time,intensities);
+         //plot.setLimits(0, 1, 0, 10);
+         plot.setLineWidth(1);
+         //plot.addErrorBars(e);
+         
+         
+
+         // add a second curve
+         /*float x2[] = {.4f,.5f,.6f,.7f,.8f};
+         float y2[] = {4,3,3,4,5};
+         plot.setColor(Color.red);
+         plot.addPoints(x2,y2,PlotWindow.X);
+         plot.addPoints(x2,y2,PlotWindow.LINE);
+
+         // add label
+         plot.setColor(Color.black);
+         plot.changeFont(new Font("Helvetica", Font.PLAIN, 24));
+         plot.addLabel(0.15, 0.95, "This is a label");
+
+         plot.changeFont(new Font("Helvetica", Font.PLAIN, 16));
+         plot.setColor(Color.blue);*/
+         plot.show();
+ 		
+ 		
+ 		
+ 	}
+	
+	
+	
+	
+	
+	
+	
 }
 

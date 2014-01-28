@@ -261,7 +261,9 @@ public class EventEvaluator{
 			    System.out.println("gof "+gof);
 				
 			    //To do: eventRadius and T mean (actually they are initialized in 0)
-				Event eventTested=new Event(0,0,0,0,startPos+startFrame,endPos+startFrame,expParams[0],expParams[1],0);
+
+				Event eventTested=new Event(0,0,0,0,0,startPos+startFrame,endPos+startFrame,expParams[0],expParams[1],0);
+
 				return eventTested;
 					
 		    }
@@ -504,7 +506,7 @@ public class EventEvaluator{
 					
 				    //To do: eventRadius and T mean (actually they are initialized in 0)
 				    
-					Event eventTested=new Event(1.387*aguess[0],1.387*aguess[1],(int)(aguess[2]+0.5),(int)(aguess[3]+0.5),startPos+startFrame,endPos+startFrame,expParams[0],expParams[1],0);
+					Event eventTested=new Event(0,1.387*aguess[0],1.387*aguess[1],(int)(aguess[2]+0.5),(int)(aguess[3]+0.5),startPos+startFrame,endPos+startFrame,expParams[0],expParams[1],0);
 					return eventTested;
 				}else{
 					return null;

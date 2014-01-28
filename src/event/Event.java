@@ -2,6 +2,7 @@ package event;
 
 public class Event{
 	
+	private int id;
 	private double eventRadiusX;//Duda: este es el radio de la trayectoria, o de la particula(zona) donde ocurre la fusion
 	private double eventRadiusY;
 	private int start;
@@ -12,7 +13,8 @@ public class Event{
 	private double tau;
 	private double tmean;//Duda: ¿estos datos se manejaran como frames(int) o como tiempo(double) directamente?
 	
-	public Event(double eventRadiusX, double eventRadiusY, int centerX, int centerY, int start, int end, double amplitude, double tau, double tmean){
+	public Event(int id,double eventRadiusX, double eventRadiusY, int centerX, int centerY, int start, int end, double amplitude, double tau, double tmean){
+		this.id=id;
 		this.eventRadiusX=eventRadiusX;
 		this.eventRadiusY=eventRadiusY;
 		this.centerX=centerX;
@@ -23,6 +25,9 @@ public class Event{
 		this.tau=tau;
 		this.tmean=tmean;
 		
+	}
+	public int getId(){
+		return id;
 	}
 	
 	public double getRadiusX(){
