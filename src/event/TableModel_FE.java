@@ -10,7 +10,7 @@ public class TableModel_FE extends DefaultTableModel/*AbstractTableModel*/ imple
 	public TableModel_FE()
 	{
 		super();
-		super.setColumnIdentifiers(new Object[]{"Id","Tau"});
+		super.setColumnIdentifiers(new Object[]{"Id","Tau","Amp","Tmean"});
 		
 		//super.setDataVector(data, columnNames);		
 	}
@@ -49,6 +49,10 @@ public class TableModel_FE extends DefaultTableModel/*AbstractTableModel*/ imple
 			case 0:			
 				return Number.class;
 			case 1:			
+				return Number.class;
+			case 2:			
+				return Number.class;
+			case 3:			
 				return Number.class;
 			default:
 				return getValueAt(0, columnIndex).getClass();				

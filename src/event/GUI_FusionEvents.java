@@ -3,8 +3,10 @@ package event;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.ListSelectionModel;
 import javax.swing.border.EmptyBorder;
 
+import java.awt.Font;
 import java.awt.GridBagLayout;
 import java.awt.GridBagConstraints;
 
@@ -15,10 +17,13 @@ import java.awt.Insets;
 import javax.swing.JTable;
 
 import main.Thinker;
+
 import javax.swing.JTextArea;
 import javax.swing.border.TitledBorder;
+
 import java.awt.Dimension;
 import java.awt.Rectangle;
+import java.awt.event.MouseEvent;
 
 public class GUI_FusionEvents extends JFrame {
 	
@@ -33,10 +38,11 @@ public class GUI_FusionEvents extends JFrame {
 	private JPanel contentPane;
 	private JPanel panel_right;
 	private JScrollPane scrollPane_textArea;
-	private JTextArea textArea;
 	private JPanel panel_chart;
 	private JPanel panel_table;
-	private JScrollPane scrollPane_table;
+	
+	private int table_selectedRow;
+	private JScrollPane scrollPane;
 	private JTable table;
 
 
@@ -85,7 +91,7 @@ public class GUI_FusionEvents extends JFrame {
 		gbc_panel_right.gridy = 0;
 		contentPane.add(getPanel_right(), gbc_panel_right);
 		GridBagConstraints gbc_panel_table = new GridBagConstraints();
-		gbc_panel_table.insets = new Insets(0, 0, 0, 5);
+		gbc_panel_table.insets = new Insets(0, 0, 5, 5);
 		gbc_panel_table.fill = GridBagConstraints.BOTH;
 		gbc_panel_table.gridx = 0;
 		gbc_panel_table.gridy = 0;
@@ -110,13 +116,6 @@ public class GUI_FusionEvents extends JFrame {
 			gbc_scrollPane_textArea.gridy = 0;
 			panel_right.add(getScrollPane_textArea(), gbc_scrollPane_textArea);
 			
-			GridBagConstraints gbc_textArea = new GridBagConstraints();
-			gbc_textArea.insets = new Insets(0, 0, 5, 0);
-			gbc_textArea.fill = GridBagConstraints.BOTH;
-			gbc_textArea.gridx = 0;
-			gbc_textArea.gridy = 1;
-			scrollPane_textArea.add(getTextArea(), gbc_textArea);
-			
 			GridBagConstraints gbc_panel_chart = new GridBagConstraints();
 			gbc_panel_chart.fill = GridBagConstraints.BOTH;
 			gbc_panel_chart.gridx = 0;
@@ -132,19 +131,10 @@ public class GUI_FusionEvents extends JFrame {
 		}
 		return scrollPane_textArea;
 	}
-	private JTextArea getTextArea() {
-		if (textArea == null) {
-			textArea = new JTextArea();
-			textArea.setBounds(new Rectangle(0, 0, 100, 100));
-			textArea.setPreferredSize(new Dimension(100, 100));
-			textArea.setMinimumSize(new Dimension(100, 100));
-		}
-		return textArea;
-	}
 	private JPanel getPanel_chart() {
 		if (panel_chart == null) {
 			panel_chart = new JPanel();
-			panel_chart.setBorder(new TitledBorder(new EmptyBorder(0, 0, 0, 0), "Intenisty vs Time", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+			panel_chart.setBorder(new TitledBorder(new EmptyBorder(0, 0, 0, 0), "Intensity vs Time", TitledBorder.LEADING, TitledBorder.TOP, null, null));
 			GridBagLayout gbl_panel_chart = new GridBagLayout();
 			gbl_panel_chart.columnWidths = new int[]{0};
 			gbl_panel_chart.rowHeights = new int[]{0};
@@ -164,31 +154,27 @@ public class GUI_FusionEvents extends JFrame {
 			gbl_panel_table.columnWeights = new double[]{1.0, Double.MIN_VALUE};
 			gbl_panel_table.rowWeights = new double[]{1.0, Double.MIN_VALUE};
 			panel_table.setLayout(gbl_panel_table);
-			GridBagConstraints gbc_scrollPane_table = new GridBagConstraints();
-			gbc_scrollPane_table.fill = GridBagConstraints.BOTH;
-			gbc_scrollPane_table.gridx = 0;
-			gbc_scrollPane_table.gridy = 0;
-			panel_table.add(getScrollPane_2(), gbc_scrollPane_table);
+			GridBagConstraints gbc_scrollPane = new GridBagConstraints();
+			gbc_scrollPane.fill = GridBagConstraints.BOTH;
+			gbc_scrollPane.gridx = 0;
+			gbc_scrollPane.gridy = 0;
+			panel_table.add(getScrollPane(), gbc_scrollPane);
 			
 		}
 		return panel_table;
 	}
-	private JScrollPane getScrollPane_2() {
-		if (scrollPane_table == null) {
-			scrollPane_table = new JScrollPane();
-			
-			GridBagConstraints gbc_table = new GridBagConstraints();
-			gbc_table.fill = GridBagConstraints.BOTH;
-			gbc_table.gridx = 0;
-			gbc_table.gridy = 0;
-			scrollPane_table.add(getTable_1(),gbc_table);
+	private JScrollPane getScrollPane() {
+		if (scrollPane == null) {
+			scrollPane = new JScrollPane();
+			scrollPane.setViewportView(getTable());
 		}
-		return scrollPane_table;
+		return scrollPane;
 	}
-	private JTable getTable_1() {
+	private JTable getTable() {
 		if (table == null) {
-			tablemodel_fe = new TableModel_FE();
+			tablemodel_fe=new TableModel_FE();
 			table = new JTable(tablemodel_fe);
+			table.setFillsViewportHeight(true);
 		}
 		return table;
 	}
