@@ -77,6 +77,10 @@ public final class LMauthor
 	 * (Chi-squared is the distribution of squared Gaussian errors,
 	 * thus the name)
 	 */
+	
+	//Code added for verifying the limits of the 
+	
+	
 	public static double chiSquared(double[][] x, double[] a, double[] y, double[] s, LMfunc f)
 	{
 		int npts = y.length;
@@ -142,7 +146,7 @@ public final class LMauthor
 	 */
 	public static double solve(double[][] x, double[] a, double[] y, double[] s, 
 							   boolean[] vary, LMfunc f, double lambda, double termepsilon, 
-							   int maxiter, int verbose) throws Exception
+							   int maxiter, int verbose,double[] limits) throws Exception
 							   {
 		int npts = y.length;
 		int nparm = a.length;
@@ -173,9 +177,16 @@ public final class LMauthor
 	
 	    int iter = 0;
 	    int term = 0;	// termination count test
-
+	    
 	    do 
 	    {
+	    	//Verifying limits from the problem domain
+	    	if (a[0]<0 || a[1]<0 || a[5]<0 || a[5]>270 || a[2]< limits[0] || a[2]>limits[1] || a[3]<limits[2] || a[3]>limits[3]){
+	    		System.out.println("Salve a que el pc se pegase");
+	    		done=true;
+	    	}else{
+	    	//end of verifying
+	    	
 	    	++iter;
 //			for( int i = 0; i < nparm; i++ ) 
 //				System.out.print("aaaaaaaaaaa:"+i+":"+a[i]+" ");	    				
@@ -259,7 +270,6 @@ public final class LMauthor
 	    			System.out.println("move rejected");
     			}
     		}
-	    	
 	    	// termination test (slightly different than NR)
 	    	if (Math.abs(e1-e0) > termepsilon) 
 	    	{
@@ -300,6 +310,7 @@ public final class LMauthor
     			}
 //	    		System.out.println();
     		}
+	    	}
     	}
 	    while(!done);
 	    return lambda;

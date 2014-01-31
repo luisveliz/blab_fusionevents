@@ -10,6 +10,7 @@ public class Gauss2dImproved implements LMfunc{
 	    public double[][] xy;
 	    public double[] z;
 	    public double b;
+	    public double[] limits;
 	    
 	    public Gauss2dImproved(double[][] xy, double[] z,double amplitude, int x0, int y0, double sigx,double sigy,double b){
 	    	this.xy=xy;
@@ -20,6 +21,7 @@ public class Gauss2dImproved implements LMfunc{
 	    	this.sigmax=sigx;
 	    	this.sigmay=sigy;
 	    	this.b=b;
+
 	    }
 	    
 	    public double val(double[] x, double[] a)

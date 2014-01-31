@@ -62,6 +62,10 @@ public class EventEvaluator{
 		//fin prueba graficación*/
 	}
 	
+	public int getImpEndFrame(){
+		return impEndFrame;
+	}
+	
 	public Event evaluate(Trajectory traj){
 		int max=0;
 		int maxIndex=-1;
@@ -262,7 +266,7 @@ public class EventEvaluator{
 				
 			    //To do: eventRadius and T mean (actually they are initialized in 0)
 
-				Event eventTested=new Event(0,0,0,0,0,startPos+startFrame,endPos+startFrame,expParams[0],expParams[1],0);
+				Event eventTested=new Event(0,0,0,0,0,startPos+startFrame,endPos+startFrame,expParams[0],expParams[1],0,new double[2]);
 
 				return eventTested;
 					
@@ -404,7 +408,7 @@ public class EventEvaluator{
 				    int patchSize=6;//Customizable variable by the user
 				    
 				    
-				    
+				    boolean eventGauss=true;
 					ImageStack is=imp.getImageStack();
 					double [] aguess=new double[6];
 					try{
@@ -414,6 +418,7 @@ public class EventEvaluator{
 						int testLimit=startPos+3;
 						if (testLimit>=smoothSlopeY.length) testLimit=smoothSlopeY.length-1;
 						//fin codigo
+						double gaussAmp=256.;
 						for (int aux=startPos+1;aux<=testLimit;aux++){
 							ImageProcessor ip=is.getProcessor(aux);
 							
@@ -430,6 +435,11 @@ public class EventEvaluator{
 							if (y2Patch>=imp.getHeight()){
 								y2Patch=imp.getHeight()-1;
 							}
+							double []limits=new double[4];
+							limits[0]=x1Patch;
+							limits[1]=x2Patch;
+							limits[2]=y1Patch;
+							limits[3]=y2Patch;
 							
 							int npts=(x2Patch-x1Patch+1)*(y2Patch-y1Patch+1);
 							double intensitiesPatch[]=new double [npts];
@@ -458,13 +468,22 @@ public class EventEvaluator{
 						    double[] s= (double[]) test[3];//Weights' matrix
 						    boolean[] vary = new boolean[aguess.length];
 						    for( int i = 0; i < aguess.length; i++ ) vary[i] = true;
-		
+						    
+						    
+						    
 						    try {
-						      LMauthor.solve( patchXY, aguess, intensitiesPatch, s, vary, f, 0.001, 0.01, 100, 2);
+						      LMauthor.solve( patchXY, aguess, intensitiesPatch, s, vary, f, 0.001, 0.01, 100, 2,limits);
 						    }
 						    catch(Exception ex) {
 						      System.err.println("Exception caught: " + ex.getMessage());
 						      System.exit(1);
+						    }
+						    if (aguess[5]<gaussAmp){
+						    	gaussAmp=aguess[5];
+						    }
+						    else{
+						    	eventGauss=false;
+						    	System.out.println("NO ES EVENTO");
 						    }
 						    System.out.println("Frame aux: "+aux+" Sigmax: "+aguess[0]+" Sigmay: "+aguess[1]+" x0: "+(int)(aguess[2]+0.5)+" y0: "+(int)(aguess[3]+0.5)+" b: "+aguess[4]+" amp: "+aguess[5]);
 						    out.println("Traj "+traj.getId()+"Frame aux: "+aux+" Sigmax: "+aguess[0]+" Sigmay: "+aguess[1]+" x0: "+(int)(aguess[2]+0.5)+" y0: "+(int)(aguess[3]+0.5)+" b: "+aguess[4]+" amp: "+aguess[5]);
@@ -480,7 +499,8 @@ public class EventEvaluator{
 					}
 					
 				  //Code for testing graphically if the filtering is working
-					PlotWindow.noGridLines = false;
+					if (eventGauss){
+					/*PlotWindow.noGridLines = false;
 				    //Plot plot = new Plot("Trajectory: "+traj.getId(),"X Axis","Y Axis",completeX,completeY);
 					Plot plot = new Plot("Neg: "+negativeChanges+" Pos: "+positiveChanges+" Tau: "+tau+" Trajectory: "+traj.getId()+" x: "+(int)(aguess[2]+0.5)+" y: "+(int)(aguess[3]+0.5),"X Axis","Y Axis",smoothSlopeX,smoothSlopeY);
 				    plot.setLimits(0, impEndFrame, -255, 255);
@@ -490,7 +510,7 @@ public class EventEvaluator{
 				    plot.addPoints(x,yprueba,PlotWindow.LINE);
 				    plot.drawLine(1, background, impEndFrame, background);
 				    /*plot.addPoints(completeX,completeY,PlotWindow.X);
-				    plot.addPoints(completeX,completeY,PlotWindow.LINE);*/
+				    plot.addPoints(completeX,completeY,PlotWindow.LINE);
 				    plot.show();
 				    Plot plot2 = new Plot("Neg: "+negativeChanges+" Pos: "+positiveChanges+" Tau: "+tau+" Trajectory: "+traj.getId()+" x: "+(int)traj.getParticlesPro()[startPos+1-startFrame].y+" y: "+(int)traj.getParticlesPro()[startPos+1-startFrame].x,"X Axis","Y Axis",slopeX,slopeY);
 				    plot2.setLimits(0, impEndFrame, -255, 255);
@@ -499,15 +519,19 @@ public class EventEvaluator{
 				    plot2.addPoints(x,yprueba,PlotWindow.X);
 				    plot2.addPoints(x,yprueba,PlotWindow.LINE);
 				    plot2.drawLine(1, background, impEndFrame, background);;
-				    plot2.show();
+				    plot2.show();*/
 				    //end of testing code
 				    //System.out.println("Sigmax: "+aguess[0]+" Sigmay: "+aguess[1]+" x0: "+(int)(aguess[2]+0.5)+" y0: "+(int)(aguess[3]+0.5)+" b: "+aguess[4]+" amp: "+aguess[5]);
 				
 					
 				    //To do: eventRadius and T mean (actually they are initialized in 0)
 				    
-					Event eventTested=new Event(0,1.387*aguess[0],1.387*aguess[1],(int)(aguess[2]+0.5),(int)(aguess[3]+0.5),startPos+startFrame,endPos+startFrame,expParams[0],expParams[1],0);
+					Event eventTested=new Event(traj.getId(),1.387*aguess[0],1.387*aguess[1],(int)(aguess[2]+0.5),(int)(aguess[3]+0.5),startPos+1,endPos+1,amplitude,tau,0,intensities);
 					return eventTested;
+					}
+					else{
+						return null;
+					}
 				}else{
 					return null;
 				}		
@@ -636,7 +660,7 @@ public class EventEvaluator{
 		double maxIntensity=-1.0;
 		int maxIndex=-1;
 		for (int i=startFrame-1;i<endFrame;i++){
-			if (intensities[i]>maxIntensity){
+			if (intensities[i]>=maxIntensity){
 				maxIntensity=intensities[i];
 				maxIndex=i;
 			}

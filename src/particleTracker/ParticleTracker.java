@@ -41,7 +41,7 @@ public class ParticleTracker
 	PreviewCanvas pc;
 	
 	public TrajectoryStackWindow trajectories_stack_window;
-	TrajectoryCanvas tc;
+	private TrajectoryCanvas tc;
 	
 
 	ImagePlus impWithTrajs;
@@ -420,6 +420,10 @@ public class ParticleTracker
 	
 	public void addEventsToCanvas(EventSet events){
 		tc.Events=events;
+	}
+	
+	public TrajectoryCanvas getTrajectoryCanvas(){
+		return tc;
 	}
 	//fin código agregado por Jordan
 

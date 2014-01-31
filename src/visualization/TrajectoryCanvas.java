@@ -35,6 +35,7 @@ public class TrajectoryCanvas extends ImageCanvas
 	//código Jordan
 	public boolean showEvents;
 	public EventSet Events;//id,x,y,xradius,yradius
+	public int currentEvent=0;
     
 	private static final long serialVersionUID = 1L;
 	
@@ -166,7 +167,11 @@ public class TrajectoryCanvas extends ImageCanvas
 			Event aux;
 			for (int i=0;i<Events.getNumberOfEvents();i++){
 				aux=Events.getEvent(i);
-				drawEvent((Graphics2D)g,aux.getCenterX(),aux.getCenterY(),aux.getRadiusX(),aux.getRadiusY(),Color.RED);
+				if (i==currentEvent){
+					drawEvent((Graphics2D)g,aux.getCenterX(),aux.getCenterY(),aux.getRadiusX(),aux.getRadiusY(),Color.GREEN);
+				}else{
+					drawEvent((Graphics2D)g,aux.getCenterX(),aux.getCenterY(),aux.getRadiusX(),aux.getRadiusY(),Color.RED);
+				}
 			}
 		}
 	}
@@ -247,6 +252,10 @@ public class TrajectoryCanvas extends ImageCanvas
 		g2D.setColor(color);
 		System.out.println("Coordenadas centro: "+Double.toString(x-xradius)+" "+Double.toString(y-yradius));
 		g2D.drawOval(this.screenXD(x-xradius), this.screenYD(y-yradius), (int) (2*xradius*this.magnification)+1, (int) (2*yradius*this.magnification)+1);
+	}
+	
+	public void setSelectedEvent(int eventIndex){
+		this.currentEvent=eventIndex;
 	}
 	//fin de código agregado por Jordan
 }

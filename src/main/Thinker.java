@@ -832,6 +832,31 @@ public class Thinker
  		
  		
  	}
+ 	
+ 	public FusionEvents getFusionEvents(){
+ 		return fusionEvents;
+ 	}
+ 	
+ 	public void showEventInfo(int eventIndex){
+ 		int nFrames=fusionEvents.getEventEvaluator().getImpEndFrame();
+ 		double time[]=new double[nFrames];
+ 		Event eventSelected=fusionEvents.getEventSet().getEvent(eventIndex);
+ 		for (int i=1;i<nFrames;i++){
+ 			time[i-1]=i;
+ 		}
+ 		fusionEvents.getFusionEventsGUI().getJFreeChartIntVsTime().setTime(time);
+		fusionEvents.getFusionEventsGUI().getJFreeChartIntVsTime().setMeanIntensity(eventSelected.getIntensities());
+		fusionEvents.getFusionEventsGUI().getJFreeChartIntVsTime().update();
+ 	}
+ 	
+ 	public void showEventSelectedInCanvas(int eventIndex){
+ 		Event eventSelected=fusionEvents.getEventSet().getEvent(eventIndex);
+ 		particleTracker.getTrajectoryCanvas().setLastFrame(eventSelected.getStart());//No sé si realmente sirva
+ 		System.out.println("Este evento comenzó en el frame: "+eventSelected.getStart());
+ 		particleTracker.getTrajectoryCanvas().setSelectedEvent(eventIndex);
+ 		IJ.getImage().setSlice(eventSelected.getStart());
+ 		
+ 	}
 	
 	
 	

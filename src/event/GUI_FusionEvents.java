@@ -21,16 +21,17 @@ import main.Thinker;
 import javax.swing.JTextArea;
 import javax.swing.border.TitledBorder;
 
+import org.jfree.chart.ChartPanel;
+import org.jfree.chart.plot.CombinedDomainXYPlot;
+
 import java.awt.Dimension;
 import java.awt.Rectangle;
 import java.awt.event.MouseEvent;
 
+
 public class GUI_FusionEvents extends JFrame {
 	
 	
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
 	private Thinker thinker;
 	private TableModel_FE tablemodel_fe;
@@ -44,6 +45,10 @@ public class GUI_FusionEvents extends JFrame {
 	private int table_selectedRow;
 	private JScrollPane scrollPane;
 	private JTable table;
+	
+	private ChartPanel cp_intVsTime;
+	
+	private FusionEvents fe_controller;
 
 
 	/**
@@ -141,6 +146,11 @@ public class GUI_FusionEvents extends JFrame {
 			gbl_panel_chart.columnWeights = new double[]{Double.MIN_VALUE};
 			gbl_panel_chart.rowWeights = new double[]{Double.MIN_VALUE};
 			panel_chart.setLayout(gbl_panel_chart);
+			GridBagConstraints gbc_scrollPane = new GridBagConstraints();
+			gbc_scrollPane.fill = GridBagConstraints.BOTH;
+			gbc_scrollPane.gridx = 0;
+			gbc_scrollPane.gridy = 0;
+			panel_chart.add(getIntVsTimeChartPanel(),gbc_scrollPane);
 		}
 		return panel_chart;
 	}
@@ -175,7 +185,34 @@ public class GUI_FusionEvents extends JFrame {
 			tablemodel_fe=new TableModel_FE();
 			table = new JTable(tablemodel_fe);
 			table.setFillsViewportHeight(true);
+			table.addMouseListener(new java.awt.event.MouseAdapter() {
+				@Override
+				public void mouseReleased(MouseEvent e) {
+					table_selectedRow = table.convertRowIndexToModel(table.getSelectedRow());					
+					//updateTrajectoryTextAreaInfo("row selected in table is:"+jTable_TrajectoriesTable.getSelectedRow()+"\n");
+					//updateTrajectoryTextAreaInfo("row selected in tableModel:"+trajectoriesTable_selectedRow+"\n");
+					System.out.println("Activé el evento"+table_selectedRow);
+					thinker.showEventInfo(table_selectedRow);
+					thinker.showEventSelectedInCanvas(table_selectedRow);
+					//thinker.jTable_TrajectoriesTable_clicked();
+				}
+			});		
 		}
 		return table;
 	}
+	
+	public ChartPanel getIntVsTimeChartPanel()
+	{
+		if(cp_intVsTime==null)
+			cp_intVsTime = new ChartPanel(new IntensityVsTimeChart(new CombinedDomainXYPlot()));
+		return cp_intVsTime;
+			
+	}
+	
+	public IntensityVsTimeChart getJFreeChartIntVsTime()
+	{
+		return (IntensityVsTimeChart) cp_intVsTime.getChart();
+	}
+	
+	
 }

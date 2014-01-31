@@ -13,7 +13,7 @@ package lmFit;
  */
 public interface LMfunc
 {
-
+  
   /**
    * x is a single point, but domain may be mulidimensional
    */
