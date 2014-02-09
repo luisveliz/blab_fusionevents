@@ -70,7 +70,7 @@ import Jama.Matrix;
  * The NR code assumes a statistical context, e.g. returns
  * covariance of parameter errors; we do not do this.
  */
-public final class LMauthor
+public final class LMIsotropic2dGaussian
 {
 	/**
 	 * calculate the current sum-squared-error
@@ -179,7 +179,7 @@ public final class LMauthor
 	    int term = 0;	// termination count test/
 	    
 	    do 
-	    {	if (a[0]<=0. || a[1]<=0. || a[5]<=0 || a[5]>270 || a[2]< limits[0] || a[2]>limits[1] || a[3]<limits[2] || a[3]>limits[3]){
+	    {	if (a[0]<=0. || a[4]<0 || a[4]>270 || a[1]<= limits[0] || a[1]>=limits[1] || a[2]<=limits[2] || a[2]>=limits[3]){
 	    		System.out.println("Exception avoided");
 	    		done=true;
     		}else{

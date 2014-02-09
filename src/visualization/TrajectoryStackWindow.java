@@ -5,6 +5,7 @@ import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
 import ij.gui.ImageCanvas;
+import ij.gui.Roi;
 import ij.gui.StackWindow;
 
 import java.awt.Button;
@@ -42,6 +43,7 @@ public class TrajectoryStackWindow extends StackWindow implements ActionListener
 	private Button button;
 	private JCheckBox all;
 	
+	private Roi selectedRoi;
 	
 	private ParticleTracker particleTracker;
 	TrajectoryCanvas icanvas;
@@ -109,7 +111,10 @@ public class TrajectoryStackWindow extends StackWindow implements ActionListener
     	super.adjustmentValueChanged(e);
     	((TrajectoryCanvas)getCanvas()).setLastFrame(this.slice);
     }
-
+    
+    public synchronized void mouseReleased(MouseEvent e){
+    	selectedRoi=this.getImagePlus().getRoi();
+    }
 	/** 
 	 * Defines the action taken upon an <code>MouseEvent</code> triggered by left-clicking 
 	 * the mouse anywhere in this <code>TrajectoryStackWindow</code>
@@ -117,18 +122,19 @@ public class TrajectoryStackWindow extends StackWindow implements ActionListener
 	 */
 	public synchronized void mousePressed(MouseEvent e) 
 	{
-		IJ.showMessage("TODO!!");
-		/* get the coordinates of mouse while it was clicked*/
+		//IJ.showMessage("TODO!!");
+		
+		/* get the coordinates of mouse while it was clicked
 		int x = e.getX();
 		int y = e.getY();
-		/* covert them to offScreen coordinates using the ImageCanvas of this window*/
+		/* covert them to offScreen coordinates using the ImageCanvas of this window
 		int offscreenX = this.ic.offScreenX(x);
 		int offscreenY = this.ic.offScreenY(y);
 		
 		boolean trajectory_clicked = false;
 		int min_dis = Integer.MAX_VALUE;
 		//Iterator iter = all_traj.iterator();
-		/* find the best Trajectory to match the mouse click*/
+		/* find the best Trajectory to match the mouse click
 		//while (iter.hasNext())
 		Trajectory[] trajs = ((TrajectoryCanvas)getCanvas()).getTrajs();
 		int chosen_traj=0;
@@ -162,7 +168,7 @@ public class TrajectoryStackWindow extends StackWindow implements ActionListener
 		
 		if (trajectory_clicked) 
 		{
-			/* focus or mark the selected Trajectory according the the type of mouse click*/
+			/* focus or mark the selected Trajectory according the the type of mouse click
 			this.imp.killRoi();
 			this.imp.updateImage();
 			// show the number of the selected Trajectory on the per trajectory 
@@ -182,14 +188,14 @@ public class TrajectoryStackWindow extends StackWindow implements ActionListener
 			else 
 			{
 				// single-click - mark the selected trajectory by setting the ROI to the 
-				// trajectory’s mouse_selection_area
+				// trajectoryï¿½s mouse_selection_area
 				this.imp.setRoi(((TrajectoryCanvas)getCanvas()).getMouseSelectionArea(chosen_traj));
 				this.particleTracker.trajectoryStackWindow_trajClicked(chosen_traj);
 			}
 		} else {
 			chosen_traj = -1;
 			//results_window.per_traj_label.setText("Trajectory (select from view)");
-		}			
+		}*/		
 		
 	}
 	public void setTrajectorySelected(int index)
@@ -202,7 +208,7 @@ public class TrajectoryStackWindow extends StackWindow implements ActionListener
 		//results_window.per_traj_label.setText("Trajectory " + chosen_traj);
 		
 		// single-click - mark the selected trajectory by setting the ROI to the 
-		// trajectory’s mouse_selection_area
+		// trajectoryï¿½s mouse_selection_area
 		this.imp.setRoi(((TrajectoryCanvas)getCanvas()).getMouseSelectionArea(index-1));
 		
 	}
@@ -299,8 +305,9 @@ public class TrajectoryStackWindow extends StackWindow implements ActionListener
 	/* (non-Javadoc)
 	 * @see java.awt.event.MouseListener#mouseReleased(java.awt.event.MouseEvent)
 	 */
-	public void mouseReleased(MouseEvent arg0) {
-		// Auto-generated method stub			
+	
+	public Roi getSelectedRoi(){
+		return selectedRoi;
 	}
     
 } // CustomStackWindow inner class

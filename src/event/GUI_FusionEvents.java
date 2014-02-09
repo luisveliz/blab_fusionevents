@@ -26,7 +26,11 @@ import org.jfree.chart.plot.CombinedDomainXYPlot;
 
 import java.awt.Dimension;
 import java.awt.Rectangle;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
+
+import javax.swing.JButton;
 
 
 public class GUI_FusionEvents extends JFrame {
@@ -48,7 +52,8 @@ public class GUI_FusionEvents extends JFrame {
 	
 	private ChartPanel cp_intVsTime;
 	
-	private FusionEvents fe_controller;
+	private JPanel panel;
+	private JButton btnTestButton;
 
 
 	/**
@@ -101,6 +106,12 @@ public class GUI_FusionEvents extends JFrame {
 		gbc_panel_table.gridx = 0;
 		gbc_panel_table.gridy = 0;
 		contentPane.add(getPanel_table(), gbc_panel_table);
+		GridBagConstraints gbc_panel = new GridBagConstraints();
+		gbc_panel.insets = new Insets(0, 0, 0, 5);
+		gbc_panel.fill = GridBagConstraints.BOTH;
+		gbc_panel.gridx = 0;
+		gbc_panel.gridy = 1;
+		contentPane.add(getPanel(), gbc_panel);
 	}
 
 	private JPanel getPanel_right() {
@@ -213,6 +224,22 @@ public class GUI_FusionEvents extends JFrame {
 	{
 		return (IntensityVsTimeChart) cp_intVsTime.getChart();
 	}
-	
-	
+	private JPanel getPanel() {
+		if (panel == null) {
+			panel = new JPanel();
+			panel.add(getButton_1());
+		}
+		return panel;
+	}
+	private JButton getButton_1() {
+		if (btnTestButton == null) {
+			btnTestButton = new JButton("Test Button");
+			btnTestButton.addActionListener(new ActionListener(){
+				public void actionPerformed(ActionEvent e){
+					thinker.manualFeSearch();
+				}
+			});
+		}
+		return btnTestButton;
+	}
 }

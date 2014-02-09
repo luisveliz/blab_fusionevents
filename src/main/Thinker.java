@@ -13,6 +13,7 @@ import ij.ImageJ;
 import ij.ImagePlus;
 import ij.gui.Plot;
 import ij.gui.PlotWindow;
+import ij.gui.Roi;
 import info.GlobalInfo;
 
 import java.util.ArrayList;
@@ -856,6 +857,20 @@ public class Thinker
  		particleTracker.getTrajectoryCanvas().setSelectedEvent(eventIndex);
  		IJ.getImage().setSlice(eventSelected.getStart());
  		
+ 	}
+ 	
+ 	public void manualFeSearch(){
+ 		Roi selectedRoi=this.particleTracker.trajectories_stack_window.getSelectedRoi();
+ 		if (selectedRoi!=null){
+	 		int x1=(int)(selectedRoi.getBounds().getMinX()+0.5);
+	 		int y1=(int)(selectedRoi.getBounds().getMinY()+0.5);
+	 		int x2=(int)(selectedRoi.getBounds().getMaxX()+0.5);
+	 		int y2=(int)(selectedRoi.getBounds().getMaxY()+0.5);
+	 		this.fusionEvents.getEventEvaluator().evaluateSelectedArea(x1, y1, x2, y2);
+	 		
+ 		}else{
+ 			IJ.showMessage("You must select an area to analize it");
+ 		}
  	}
 	
 	

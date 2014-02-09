@@ -4,6 +4,8 @@ import java.awt.Color;
 
 import lmFit.Gauss2dAnisotropic;
 import lmFit.Gauss2dImproved;
+import lmFit.Gauss2dIsotropic;
+import lmFit.LMIsotropic2dGaussian;
 import lmFit.LMauthor;
 import lmFit.LMfunc;
 import particleTracker.ParticleDetector;
@@ -29,6 +31,7 @@ public class EventEvaluator{
 	private int limitRadius;
 	private int deltaWindow;
 	private int areaRadius;
+	private int fitPatchSize=3;
 	
 	private int impEndFrame; //Actual length of the movie.
 	
@@ -288,26 +291,87 @@ public class EventEvaluator{
 		double intensities[]=new double[impEndFrame];
 		getEventIntensities(intensities,startFrame,endFrame,trajParticles);
 		
-		int xStartEvent=(int)trajParticles[0].y;
+		/*int xStartEvent=(int)trajParticles[0].y;
 		int yStartEvent=(int)trajParticles[0].x;
 		int xEndEvent=(int)trajParticles[trajLength-1].y;
 		int yEndEvent=(int)trajParticles[trajLength-1].x;
-		getBackgroundIntensities(intensities,xStartEvent,yStartEvent,startFrame,xEndEvent,yEndEvent,endFrame);
+		getBackgroundIntensities(intensities,xStartEvent,yStartEvent,startFrame,xEndEvent,yEndEvent,endFrame);*/
 		
 		
 		int maxIndex=getMaxIntensityIndex(intensities,startFrame,endFrame);
 		
-		int xEvent=(int)trajParticles[maxIndex+1-startFrame].y;
-		int yEvent=(int)trajParticles[maxIndex+1-startFrame].x;
+		int xEvent=(int)(trajParticles[maxIndex+1-startFrame].y+0.5);
+		int yEvent=(int)(trajParticles[maxIndex+1-startFrame].x+0.5);
 		
-		updateAllEventIntensities(intensities,xEvent,yEvent);
+		//Código que ajusta el centro de la vesicula en el punto de la máxima intensidad
+		int x1Patch=xEvent-fitPatchSize;
+	    int x2Patch=xEvent+fitPatchSize;
+	    int y1Patch=yEvent-fitPatchSize;
+	    int y2Patch=yEvent+fitPatchSize;
+	    
+	    if (x1Patch<0) x1Patch=0;
+		if (y1Patch<0) y1Patch=0;
+		if (x2Patch>=imp.getWidth()){
+			x2Patch=imp.getWidth()-1;
+		}
+		if (y2Patch>=imp.getHeight()){
+			y2Patch=imp.getHeight()-1;
+		}
+		double []limits=new double[4];
+		limits[0]=x1Patch;
+		limits[1]=x2Patch;
+		limits[2]=y1Patch;
+		limits[3]=y2Patch;
+		
+		int npts=(x2Patch-x1Patch+1)*(y2Patch-y1Patch+1);
+		double intensitiesPatch[]=new double [npts];
+		double patchXY[][]=new double[npts][2];
+		ImageProcessor ip=imp.getImageStack().getProcessor(maxIndex+1);
+		int c=0;
+	    for (int xi=x1Patch;xi<=x2Patch;xi++){
+	    	for (int yi=y1Patch;yi<=y2Patch;yi++){
+	    		intensitiesPatch[c]=ip.getPixel(xi, yi);
+	    		patchXY[c][0]=xi;
+	    		patchXY[c][1]=yi;
+	    		c++;
+	    	}
+	    }
+	    
+	    System.out.println("Intensidades patch frame: "+(maxIndex+1)+" centerX:"+xEvent+" centerY:"+yEvent);
+	    for (int u=0;u<intensitiesPatch.length;u++){
+	    	System.out.print(intensitiesPatch[u]+",");
+	    }
+	    
+	    int amp=ip.getPixel(xEvent,yEvent);
+	    LMfunc f=new Gauss2dImproved(patchXY,intensitiesPatch,amp-50,xEvent,yEvent,1.0,1.0,50);
+	    double []aguess=new double[6];
+	    aguess = f.initial();
+	    Object[] test = f.testdata(npts);
+	    double[] s= (double[]) test[3];//Weights' matrix
+	    boolean[] vary = new boolean[aguess.length];
+	    for( int i = 0; i < aguess.length; i++ ) vary[i] = true;
+	    
+	    
+	    
+	    try {
+	      LMauthor.solve( patchXY, aguess, intensitiesPatch, s, vary, f, 0.001, 0.01, 1000, 2,limits);
+	    }
+	    catch(Exception ex) {
+	      System.err.println("Exception caught: " + ex.getMessage());
+	      System.exit(1);
+	    }
+		//Fin de código de prueba
+		int xCenter=(int)(aguess[2]+0.5);
+		int yCenter=(int)(aguess[3]+0.5);
+		
+		updateAllEventIntensities(intensities,xCenter,yCenter);
 		
 		double background=getAvgEventBackground(intensities,startFrame,endFrame);
 		
 		int endAnalysis=maxIndex+deltaWindow;
 		if (endAnalysis>=impEndFrame) endAnalysis=impEndFrame-1;
 		
-		Event ev=verifyExponentialImproved(traj,xEvent,yEvent,maxIndex,endAnalysis,startFrame,intensities,background);
+		Event ev=verifyExponentialImproved(traj,xCenter,yCenter,maxIndex,endAnalysis,startFrame,intensities,background);
 		System.out.println("Termine verificacion de la exponencial");
 		return ev;
 	}
@@ -557,8 +621,8 @@ public class EventEvaluator{
 			x=particle.y;
 			y=particle.x;
 			
-			xEvent=(int) x;
-			yEvent=(int) y;
+			xEvent=(int) (x+0.5);
+			yEvent=(int) (y+0.5);
 			
 			if (x==-1 && y==-1){
 				xEvent=lastX;
@@ -695,5 +759,140 @@ public class EventEvaluator{
 			intensities[i-1]=getAreaIntensity(is,i,xmin,xmax,ymin,ymax,numPixels);
 		}
 		System.out.println("Actualicé centro del evento a x: "+xEvent+" y: "+yEvent);
+	}
+	
+	public int getMaxIncreaseIndex(double [] intensities){
+		double currentMaxIncrease=0;
+		double maxIncrease=0;
+		int maxIndex=-1;
+		double delta=-1;
+		for (int i=1;i<intensities.length;i++){
+			delta=intensities[i]-intensities[i-1];
+			if (delta>0){
+				currentMaxIncrease=currentMaxIncrease+delta;
+				if (currentMaxIncrease>maxIncrease){
+					maxIndex=i;
+					maxIncrease=currentMaxIncrease;
+				}
+			}else{
+				currentMaxIncrease=0;
+			}
+		}
+		return maxIndex;
+	}
+	
+	public void evaluateSelectedArea(int x1, int y1, int x2, int y2){
+		double[] intensities=new double[impEndFrame];
+		ImageStack is=imp.getImageStack();
+		int xCenter=((x2-x1)/2)+x1;
+		int yCenter=((y2-y1)/2)+y1;
+		ImageProcessor ip;
+		int d;
+		for (int i=1;i<impEndFrame;i++){
+			ip=is.getProcessor(i);
+			d=0;
+			for (int xi=xCenter-1;xi<=xCenter+1;xi++){
+				for (int yi=yCenter-1;yi<=yCenter+1;yi++){
+					d++;
+					intensities[i-1]=intensities[i-1]+ip.getPixel(xi, yi);
+				}
+			}
+			intensities[i-1]=intensities[i-1]/d;
+		}
+		int maxIndex=getMaxIntensityIndex(intensities,1,impEndFrame-1);
+		int areaSize=(x2-x1+1)*(y2-y1+1);
+		double [][] patchXY=new double[areaSize][2];
+		int c=0;
+		for(int j=x1;j<=x2;j++){
+			for (int k=y1;k<=y2;k++){
+				patchXY[c][0]=j;
+				patchXY[c][1]=k;
+				c++;
+			}
+		}
+		boolean testGauss=true;
+		int centerX=0;
+		int centerY=0;
+		int aux=maxIndex+1;
+		double lastGaussAmp=300.;
+		while(testGauss){
+		double []intensitiesPatch= new double[areaSize];
+		c=0;
+		ip=is.getProcessor(aux);
+		for (int xi=x1;xi<=x2;xi++){
+			for (int yi=y1;yi<=y2;yi++){
+				intensitiesPatch[c]=ip.getPixel(xi, yi);
+				c++;
+			}
+		}
+		System.out.println("Old x center: "+xCenter+" Old y center: "+yCenter);
+		for (int h=0;h<intensitiesPatch.length;h++) System.out.print(intensitiesPatch[h]+",");
+		double background=getAvgEventBackground(intensities,maxIndex-3,maxIndex+3);
+		int amp=ip.getPixel(xCenter,yCenter);
+	    LMfunc f=new Gauss2dIsotropic(patchXY,intensitiesPatch,amp-background,xCenter,yCenter,1.0,background);
+	    double[] aguess=new double[5];
+	    aguess = f.initial();
+	    Object[] test = f.testdata(areaSize);
+	    double[] s= (double[]) test[3];//Weights' matrix
+	    boolean[] vary = new boolean[aguess.length];
+	    for( int i = 0; i < aguess.length; i++ ) vary[i] = true;
+	    double []limits=new double[4];
+	    limits[0]=x1;
+	    limits[1]=x2;
+	    limits[2]=y1;
+	    limits[3]=y2;
+	    
+	    
+	    try {
+	      LMIsotropic2dGaussian.solve( patchXY, aguess, intensitiesPatch, s, vary, f, 0.001, 0.01, 100, 2,limits);
+	    }
+	    catch(Exception ex) {
+	      System.err.println("Exception caught: " + ex.getMessage());
+	      System.exit(1);
+	    }
+	    double r2=LMIsotropic2dGaussian.rSquared(patchXY, aguess, intensitiesPatch, s, f);
+	    System.out.println("R2: "+r2);
+	    System.out.println("Desvest: "+aguess[0]+"Centro x: "+aguess[1]+" Centro y: "+aguess[2]+" amplitude: "+aguess[4]);
+	    if (aux==maxIndex+1){
+		    centerX=(int)(aguess[1]+0.5);
+		    centerY=(int)(aguess[2]+0.5);
+		    updateAllEventIntensities(intensities,centerX,centerY);
+	    }
+	    try{
+	    	FileWriter fstream = new FileWriter("test.txt",true);
+			PrintWriter out = new PrintWriter(fstream);
+	    	out.println("Frame aux: "+aux+" Sigma: "+aguess[0]+" x0: "+centerX+" y0: "+centerY+" b: "+aguess[3]+" amp: "+aguess[4]);
+		    out.println("Chi square: "+LMIsotropic2dGaussian.chiSquared(patchXY, aguess, intensitiesPatch, s, f));
+		    out.println("R2: "+r2);
+		    out.close();
+	    }catch(Exception e){
+			System.err.println("Error: " + e.getMessage());
+	    }
+	    /*if (aguess[4]<lastGaussAmp){
+	    	lastGaussAmp=aguess[4];
+	    	aux++;*/
+	    if (r2>0.4){
+	    	aux++;
+	    }else{
+	    	testGauss=false;
+	    }
+		}
+	    int maxIncreaseIndex=getMaxIncreaseIndex(intensities);
+	    //Plotting intensities code
+	    double[] x=new double[impEndFrame];
+	    for (int i=1;i<=impEndFrame;i++){
+	    	x[i-1]=i;
+	    }
+	    PlotWindow.noGridLines = false;
+	    //Plot plot = new Plot("Trajectory: "+traj.getId(),"X Axis","Y Axis",completeX,completeY);
+		Plot plot = new Plot(" x: "+centerX+" y: "+centerY+" max increase: "+maxIncreaseIndex,"X Axis","Y Axis",x,intensities);
+	    plot.setLimits(0, impEndFrame, -255, 255);
+	    plot.setLineWidth(1);
+	    plot.setColor(Color.red);
+	    //plot.drawLine(1, aguess[4], impEndFrame, aguess[4]);
+	    plot.show();
+	    //End plotting code
+		
+		
 	}
 }
