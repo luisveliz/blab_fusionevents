@@ -8,6 +8,7 @@ public class FusionEvents {
 	Thinker thinker;
 	
 	GUI_FusionEvents gui_fusionevents;
+	GUI_InputParameters gui_input;
 	EventEvaluator eventEvaluator;
 	EventSet eventSet;
 	
@@ -15,8 +16,10 @@ public class FusionEvents {
 	public FusionEvents(Thinker thinker){
 		System.out.println("Fusion Events!!!!");
 		this.thinker = thinker;
+		
 		gui_fusionevents = new GUI_FusionEvents(thinker);
-		fusionEvents();
+		gui_input=new GUI_InputParameters(gui_fusionevents);
+		
 		
 		
 		
@@ -27,11 +30,13 @@ public class FusionEvents {
 	
 
 	
+	public void changeWindowAnalysisSize(int size){
+		eventEvaluator.setWindowAnalysisSize(size);
+	}
 	
-	
-	public void fusionEvents(){
+	public void fusionEvents(int fitPatchSize, int timeBetweenFrames){
 		
-		eventEvaluator = new EventEvaluator(thinker.particleTracker.getMovie().getImp(), 4, 25,1);
+		eventEvaluator = new EventEvaluator(thinker.particleTracker.getMovie().getImp(), 4 , 25 ,1,fitPatchSize,timeBetweenFrames);
 		TrajSet trajSet = thinker.getSelectedSet();
 		
 		eventSet = new EventSet();

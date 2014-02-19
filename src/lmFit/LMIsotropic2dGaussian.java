@@ -179,7 +179,7 @@ public final class LMIsotropic2dGaussian
 	    int term = 0;	// termination count test/
 	    
 	    do 
-	    {	if (a[0]<=0. || a[4]<0 || a[4]>270 || a[1]<= limits[0] || a[1]>=limits[1] || a[2]<=limits[2] || a[2]>=limits[3]){
+	    {	if (a[0]<=0.5 || a[4]<0 || a[4]>270 || a[1]<= limits[0] || a[1]>=limits[1] || a[2]<=limits[2] || a[2]>=limits[3]){
 	    		System.out.println("Exception avoided");
 	    		done=true;
     		}else{

@@ -62,16 +62,8 @@ public class GUI_FusionEvents extends JFrame {
 	public GUI_FusionEvents(Thinker thinker) {
 		super();
 		this.thinker = thinker;
-		setVisible(true);
 		setTitle("Fusion Events");
-		
-		
-		
-		
-		initialize();
-		
-		
-		
+		setVisible(false);
 	}
 	
 	public void addRowInFETableModel(Object[] rowData)
@@ -241,5 +233,14 @@ public class GUI_FusionEvents extends JFrame {
 			});
 		}
 		return btnTestButton;
+	}
+	
+	public void startFeDetection(int fitPatchSize, int timeBetweenFrames){
+		initialize();
+		
+		thinker.getFusionEvents().fusionEvents(fitPatchSize,timeBetweenFrames);
+		
+		setVisible(true);
+		
 	}
 }
