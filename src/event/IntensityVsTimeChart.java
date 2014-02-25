@@ -181,54 +181,7 @@ public class IntensityVsTimeChart extends JFreeChart
 				intensityPlot.addDomainMarker(eventsMarkers.get(i));
 			}
 	}
-	public void setDifT(double difT)
-	{
-		difT1A = new XYLineAnnotation(0, difT, time[time.length-1], difT, new BasicStroke(), Color.BLACK);
-		difT2A = new XYLineAnnotation(0, -difT, time[time.length-1], -difT, new BasicStroke(), Color.BLACK);
-	}
-	public void setIntT(int intThreshold)
-	{
-		intTA = new XYLineAnnotation(0, intThreshold, time[time.length-1], intThreshold, new BasicStroke(), Color.BLACK);
-	}
-	public void setIntFET(int intFET)
-	{
-		intFETA = new XYLineAnnotation(0, intFET, time[time.length-1], intFET, new BasicStroke(), Color.GREEN);
-	}
-	public void setFrame(int frame)
-	{
-		frameA = new XYLineAnnotation(frame, 0, frame, 260, new BasicStroke(), Color.BLACK);
-	}
 	
-	public void setTimeInstant (double time){
-		time_instant = new XYLineAnnotation(time, 0, time, 260, new BasicStroke(), Color.BLACK);
-	}
-	
-	public void setTime(double[] time){
-		this.time=time;
-	}
-	
-	public void updateTime(double[] time, int[]current_intensity, double[] current_gaussX, double[] current_gaussY)
-	{
-		this.time = time;
-		this.intensity.clear();
-		for (int i=0;i<time.length;i++){
-			this.intensity.add(time[i],current_intensity[i]);
-		}
-		this.domainAxis.setRange(time[0],time[time.length -1]);
-		this.domainAxis.setLabel("Time (s)");
-		this.update();
-		
-	}
-	
-	
-
-//	public void setDif(double[] dif)
-//	{
-//		assert dif.length == time.length;
-//		this.dif.clear();
-//		for(int i=0;i<time.length;i++)
-//			this.dif.add(time[i],dif[i]);
-//	}
 	public void setIntensity(int[] intensity)
 	{
 		assert time.length == intensity.length;
@@ -256,40 +209,7 @@ public class IntensityVsTimeChart extends JFreeChart
 	{
 		intensityFit.clear();
 	}
-	public void addEventMarker(int begin, int end)
-	{
-		eventsMarkers.add(new IntervalMarker(begin, end, Color.GREEN, new BasicStroke(), Color.BLACK, new BasicStroke(), 0.3f));
-	}
-	
-	public void addEventMarker (double begin, double end){
-		eventsMarkers.add(new IntervalMarker(begin, end, Color.GREEN, new BasicStroke(), Color.BLACK, new BasicStroke(), 0.3f));
-	}
-	
-	public void clearEventMarkers()
-	{
-		eventsMarkers.clear();
-	}
-	public void showFrame(boolean showFrame)
-	{
-		this.showFrame = showFrame;
-	}
 
-	public void showIntT(boolean showIntT)
-	{
-		this.showIntT = showIntT;
-	}
-	public void showIntensity(boolean showIntensity)
-	{
-		this.showIntensity = showIntensity;
-	}
 
-	public void showFE(boolean showFE)
-	{
-		this.showFE = showFE;
-	}
-	public void showFit(boolean showFit)
-	{
-		this.showFit = showFit;
-	}
 	
 }

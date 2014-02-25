@@ -62,6 +62,7 @@ public class GUI_FusionEvents extends JFrame {
 	public GUI_FusionEvents(Thinker thinker) {
 		super();
 		this.thinker = thinker;
+		initialize();
 		setTitle("Fusion Events");
 		setVisible(false);
 	}
@@ -236,7 +237,6 @@ public class GUI_FusionEvents extends JFrame {
 	}
 	
 	public void startFeDetection(int fitPatchSize, int timeBetweenFrames){
-		initialize();
 		
 		thinker.getFusionEvents().fusionEvents(fitPatchSize,timeBetweenFrames);
 		

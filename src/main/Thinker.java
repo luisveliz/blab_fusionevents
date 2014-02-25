@@ -846,7 +846,7 @@ public class Thinker
  			time[i-1]=i;
  		}
  		System.out.println("Evento de traj "+eventSelected.getId());
- 		fusionEvents.getFusionEventsGUI().getJFreeChartIntVsTime().setTime(time);
+ 		//fusionEvents.getFusionEventsGUI().getJFreeChartIntVsTime().setTime(time);
 		fusionEvents.getFusionEventsGUI().getJFreeChartIntVsTime().setMeanIntensity(eventSelected.getIntensities());
 		fusionEvents.getFusionEventsGUI().getJFreeChartIntVsTime().update();
  	}
