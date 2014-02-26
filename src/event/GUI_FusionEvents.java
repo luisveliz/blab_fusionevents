@@ -217,7 +217,15 @@ public class GUI_FusionEvents extends JFrame {
 					thinker.showEventSelectedInCanvas(table_selectedRow);
 					//thinker.jTable_TrajectoriesTable_clicked();
 				}
-			});		
+			});	
+			table.addKeyListener(new java.awt.event.KeyAdapter(){
+				public void keyReleased(java.awt.event.KeyEvent e) {
+					table_selectedRow = table.convertRowIndexToModel(table.getSelectedRow());
+					thinker.showEventInfo(table_selectedRow);
+					thinker.showEventSelectedInCanvas(table_selectedRow);
+				}
+				
+			});
 		}
 		return table;
 	}
