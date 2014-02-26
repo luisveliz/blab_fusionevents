@@ -1229,11 +1229,25 @@ public class EventEvaluator{
 	    }
 	    
 	    
-	    int framesFitted=aux-(maxIndex+1)+5;
+	    /*new section of code
+	    boolean nearToBg=false;
+	    while (aux!=impEndFrame && nearToBg){
+	    	aux++;
+	    	if (intensities[aux-1]<=1.2*backgroundAvg){
+	    		nearToBg=false;
+	    	}
+	    }
+	    int framesFitted=aux-(maxIndex+1);
+	    //new section of code*/
+	    int framesFitted=aux-(maxIndex+1)+10;//the original and probed line of code
+
+	    int maxLimit=maxIndex+framesFitted;
+	    if (maxLimit>=impEndFrame){
+	    	maxLimit=impEndFrame-1;
+	    	framesFitted=impEndFrame-(maxIndex+1);
+	    	}
 	    double[] xFitter=new double[framesFitted];
 	    double[] yFitter=new double[framesFitted];
-	    int maxLimit=maxIndex+framesFitted;
-	    if (maxLimit>=impEndFrame)maxLimit=impEndFrame-1;
 	    
 
 	    for (int i=maxIndex;i<maxLimit;i++){
@@ -1254,11 +1268,10 @@ public class EventEvaluator{
 			double gof = checker.getFitGoodness();
 			double[] expParams=new double[2];
 			expParams = checker.getParams();
-			double fit[][] = new double[2][xFitter.length];
+			double yFit[] = new double[xFitter.length];
 			for(int i=0;i<xFitter.length;i++)
 			{
-				fit[0][i] = xFitter[i];
-				fit[1][i] = checker.f(expParams, x[i]);
+				yFit[i] = checker.f(expParams, xFitter[i]);
 				//System.out.println("Exp: x->"+fit[0][i]+" y->"+fit[1][i]);
 			}
 			double tau=-1/expParams[1];
@@ -1328,10 +1341,10 @@ public class EventEvaluator{
 			    //Plot plot = new Plot("Trajectory: "+traj.getId(),"X Axis","Y Axis",completeX,completeY);
 				Plot plot = new Plot("Traj: "+id+" prob: "+(avgR2*gof)+" r2: "+avgR2+" gof: "+gof+" x: "+centerX+" y: "+centerY+" pendiente inc: "+increaseRatio,"X Axis","Y Axis",x,intensities);
 			    //Plot plot = new Plot(" x: "+centerX+" y: "+centerY,"X Axis","Y Axis",x,intensities);
-			    plot.setLimits(0, impEndFrame, -255, 255);
+			    plot.setLimits(0, impEndFrame, 0, 255);
 			    plot.setLineWidth(1);
 			    plot.setColor(Color.red);
-			    plot.addPoints(x,intensities2,PlotWindow.LINE);
+			    plot.addPoints(xFitter,yFit,PlotWindow.LINE);
 			    plot.drawLine(1, backgroundAvg, impEndFrame, backgroundAvg);
 			    plot.show();
 			    //End plotting code

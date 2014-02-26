@@ -25,6 +25,10 @@ public class EventSet{
 		nEvents++;
 	}
 	
+	public void deleteEvent(int indexEvent){
+		events.remove(indexEvent);
+	}
+	
 	public double getAvgTau(){
 		return this.averageTau;
 	}

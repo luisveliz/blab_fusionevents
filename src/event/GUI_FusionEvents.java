@@ -54,6 +54,8 @@ public class GUI_FusionEvents extends JFrame {
 	
 	private JPanel panel;
 	private JButton btnTestButton;
+	private JPanel panel_1;
+	private JButton btnDeleteSelectedEvent;
 
 
 	/**
@@ -83,9 +85,9 @@ public class GUI_FusionEvents extends JFrame {
 		setContentPane(contentPane);
 		GridBagLayout gbl_contentPane = new GridBagLayout();
 		gbl_contentPane.columnWidths = new int[]{336, 230, 0};
-		gbl_contentPane.rowHeights = new int[]{260, -33, 0};
-		gbl_contentPane.columnWeights = new double[]{1.0, 0.0, Double.MIN_VALUE};
-		gbl_contentPane.rowWeights = new double[]{0.0, 1.0, Double.MIN_VALUE};
+		gbl_contentPane.rowHeights = new int[]{260, -25, -33, 0};
+		gbl_contentPane.columnWeights = new double[]{1.0, 1.0, Double.MIN_VALUE};
+		gbl_contentPane.rowWeights = new double[]{0.0, 1.0, 1.0, Double.MIN_VALUE};
 		contentPane.setLayout(gbl_contentPane);
 		GridBagConstraints gbc_panel_right = new GridBagConstraints();
 		gbc_panel_right.insets = new Insets(0, 0, 5, 0);
@@ -99,12 +101,22 @@ public class GUI_FusionEvents extends JFrame {
 		gbc_panel_table.gridx = 0;
 		gbc_panel_table.gridy = 0;
 		contentPane.add(getPanel_table(), gbc_panel_table);
+		GridBagConstraints gbc_panel_1 = new GridBagConstraints();
+		gbc_panel_1.insets = new Insets(0, 0, 5, 0);
+		gbc_panel_1.fill = GridBagConstraints.BOTH;
+		gbc_panel_1.gridx = 1;
+		gbc_panel_1.gridy = 1;
+		contentPane.add(getPanel_1(), gbc_panel_1);
 		GridBagConstraints gbc_panel = new GridBagConstraints();
 		gbc_panel.insets = new Insets(0, 0, 0, 5);
 		gbc_panel.fill = GridBagConstraints.BOTH;
 		gbc_panel.gridx = 0;
-		gbc_panel.gridy = 1;
+		gbc_panel.gridy = 2;
 		contentPane.add(getPanel(), gbc_panel);
+		GridBagConstraints gbc_btnTestButton = new GridBagConstraints();
+		gbc_btnTestButton.gridx = 1;
+		gbc_btnTestButton.gridy = 2;
+		contentPane.add(getButton_1(), gbc_btnTestButton);
 	}
 
 	private JPanel getPanel_right() {
@@ -163,16 +175,21 @@ public class GUI_FusionEvents extends JFrame {
 			panel_table = new JPanel();
 			panel_table.setBorder(new TitledBorder(new EmptyBorder(0, 0, 0, 0), "Events", TitledBorder.LEADING, TitledBorder.TOP, null, null));
 			GridBagLayout gbl_panel_table = new GridBagLayout();
-			gbl_panel_table.columnWidths = new int[]{0, 0};
-			gbl_panel_table.rowHeights = new int[]{0, 0};
-			gbl_panel_table.columnWeights = new double[]{1.0, Double.MIN_VALUE};
-			gbl_panel_table.rowWeights = new double[]{1.0, Double.MIN_VALUE};
+			gbl_panel_table.columnWidths = new int[]{260, 0};
+			gbl_panel_table.rowHeights = new int[]{234, 0, 0};
+			gbl_panel_table.columnWeights = new double[]{0.0, Double.MIN_VALUE};
+			gbl_panel_table.rowWeights = new double[]{0.0, 0.0, Double.MIN_VALUE};
 			panel_table.setLayout(gbl_panel_table);
 			GridBagConstraints gbc_scrollPane = new GridBagConstraints();
+			gbc_scrollPane.insets = new Insets(0, 0, 5, 0);
 			gbc_scrollPane.fill = GridBagConstraints.BOTH;
 			gbc_scrollPane.gridx = 0;
 			gbc_scrollPane.gridy = 0;
 			panel_table.add(getScrollPane(), gbc_scrollPane);
+			GridBagConstraints gbc_btnDeleteSelectedEvent = new GridBagConstraints();
+			gbc_btnDeleteSelectedEvent.gridx = 0;
+			gbc_btnDeleteSelectedEvent.gridy = 1;
+			panel_table.add(getBtnDeleteSelectedEvent(), gbc_btnDeleteSelectedEvent);
 			
 		}
 		return panel_table;
@@ -220,7 +237,6 @@ public class GUI_FusionEvents extends JFrame {
 	private JPanel getPanel() {
 		if (panel == null) {
 			panel = new JPanel();
-			panel.add(getButton_1());
 		}
 		return panel;
 	}
@@ -242,5 +258,17 @@ public class GUI_FusionEvents extends JFrame {
 		
 		setVisible(true);
 		
+	}
+	private JPanel getPanel_1() {
+		if (panel_1 == null) {
+			panel_1 = new JPanel();
+		}
+		return panel_1;
+	}
+	private JButton getBtnDeleteSelectedEvent() {
+		if (btnDeleteSelectedEvent == null) {
+			btnDeleteSelectedEvent = new JButton("Delete selected event");
+		}
+		return btnDeleteSelectedEvent;
 	}
 }
