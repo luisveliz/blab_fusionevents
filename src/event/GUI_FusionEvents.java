@@ -88,16 +88,19 @@ public class GUI_FusionEvents extends JFrame {
 	
 	private void initialize(){
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		setBounds(100,100,800,600);
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
 		GridBagLayout gbl_contentPane = new GridBagLayout();
-		gbl_contentPane.rowHeights = new int[] {200, 200, 200, 200};
+		gbl_contentPane.rowHeights = new int[] {150, 150, 150, 150};
 		gbl_contentPane.columnWidths = new int[] {400, 400};
 		gbl_contentPane.columnWeights = new double[]{1.0, 1.0};
 		gbl_contentPane.rowWeights = new double[]{1.0, 1.0, 1.0, 1.0};
 		contentPane.setLayout(gbl_contentPane);
 		GridBagConstraints gbc_panel_table = new GridBagConstraints();
+		gbc_panel_table.anchor = GridBagConstraints.NORTH;
+		gbc_panel_table.fill = GridBagConstraints.BOTH;
 		gbc_panel_table.gridheight = 2;
 		gbc_panel_table.insets = new Insets(0, 0, 5, 5);
 		gbc_panel_table.gridx = 0;
@@ -110,6 +113,7 @@ public class GUI_FusionEvents extends JFrame {
 		gbc_panel_info.gridy = 0;
 		contentPane.add(getPanel_info(), gbc_panel_info);
 		GridBagConstraints gbc_panel_plot = new GridBagConstraints();
+		gbc_panel_plot.anchor = GridBagConstraints.NORTH;
 		gbc_panel_plot.insets = new Insets(0, 0, 5, 0);
 		gbc_panel_plot.gridheight = 2;
 		gbc_panel_plot.fill = GridBagConstraints.BOTH;
