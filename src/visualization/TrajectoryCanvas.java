@@ -35,7 +35,7 @@ public class TrajectoryCanvas extends ImageCanvas
 	//código Jordan
 	public boolean showEvents;
 	public EventSet Events;//id,x,y,xradius,yradius
-	public int currentEvent=0;
+	public int currentEvent=-1;
     
 	private static final long serialVersionUID = 1L;
 	
@@ -256,6 +256,23 @@ public class TrajectoryCanvas extends ImageCanvas
 	
 	public void setSelectedEvent(int eventIndex){
 		this.currentEvent=eventIndex;
+		this.repaint();
 	}
+	
+	public int updateEventSetAfterAdding(EventSet eventSet){
+		this.Events=eventSet;
+		//this.currentEvent=eventSet.getNumberOfEvents()-1;
+		this.repaint();
+		return eventSet.getNumberOfEvents()-1;
+		
+	}
+	
+	public void updateEventSetAfterDeleting(EventSet eventSet){
+		this.Events=eventSet;
+		this.currentEvent=-1;
+		this.repaint();
+		
+	}
+	
 	//fin de código agregado por Jordan
 }

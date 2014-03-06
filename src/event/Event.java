@@ -13,8 +13,9 @@ public class Event{
 	private double tau;
 	private double tmean;//Duda: ¿estos datos se manejaran como frames(int) o como tiempo(double) directamente?
 	private double intensities[];
+	private double expFit[][];
 	
-	public Event(int id,double eventRadiusX, double eventRadiusY, int centerX, int centerY, int start, int end, double amplitude, double tau, double tmean, double[] intensities){
+	public Event(int id,double eventRadiusX, double eventRadiusY, int centerX, int centerY, int start, int end, double amplitude, double tau, double tmean, double[] intensities, double[][] expFit){
 		this.id=id;
 		this.eventRadiusX=eventRadiusX;
 		this.eventRadiusY=eventRadiusY;
@@ -26,6 +27,7 @@ public class Event{
 		this.tau=tau;
 		this.tmean=tmean;
 		this.intensities=intensities;
+		this.expFit=expFit;
 		
 	}
 	public int getId(){
@@ -70,6 +72,10 @@ public class Event{
 	
 	public double[] getIntensities(){
 		return intensities;
+	}
+	
+	public double[][] getExpFit(){
+		return expFit;
 	}
 	
 }

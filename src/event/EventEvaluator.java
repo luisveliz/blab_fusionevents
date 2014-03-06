@@ -81,14 +81,14 @@ public class EventEvaluator{
 		return impEndFrame;
 	}
 	
-	public Event evaluate(Trajectory traj){
+	/*public Event evaluate(Trajectory traj){
 		int max=0;
 		int maxIndex=-1;
 		
 		
 		/*if (traj.getRadio() > limitRadius){
 			return null;
-		}*/
+		}
 		System.out.println("Trajectory id: "+traj.getId());
 		double x=traj.getCentroide_Y();
 		double y=traj.getCentroide_X();
@@ -216,7 +216,7 @@ public class EventEvaluator{
 			ip=is.getProcessor(c+1);
 			completeX[c]=c+1;
 			completeY[c]=ip.getPixel(pixelX, pixelY);
-		}*/
+		}
 		
 		//end of test code
 		
@@ -289,7 +289,7 @@ public class EventEvaluator{
 			return null;
 		}
 		return null;
-	}
+	}*/
 	
 	public Event evaluateImproved(Trajectory traj){
 		
@@ -622,7 +622,7 @@ public class EventEvaluator{
 					
 				    //To do: eventRadius and T mean (actually they are initialized in 0)
 				    
-					Event eventTested=new Event(traj.getId(),1.387*aguess[0],1.387*aguess[1],(int)(aguess[2]+0.5),(int)(aguess[3]+0.5),startPos+1,endPos+1,amplitude,tau,0,intensities);
+					Event eventTested=new Event(traj.getId(),1.387*aguess[0],1.387*aguess[1],(int)(aguess[2]+0.5),(int)(aguess[3]+0.5),startPos+1,endPos+1,amplitude,tau,0,intensities,null);
 					return eventTested;
 					}
 					else{
@@ -832,7 +832,7 @@ public class EventEvaluator{
 		return increaseRatio;
 	}
 	
-	public void evaluateSelectedArea(int x1, int y1, int x2, int y2){
+	public Event evaluateSelectedArea(int x1, int y1, int x2, int y2){
 		double[] intensities=new double[impEndFrame];
 		ImageStack is=imp.getImageStack();
 		int xCenter=((x2-x1)/2)+x1;
@@ -862,8 +862,8 @@ public class EventEvaluator{
 			}
 		}
 		boolean testGauss=true;
-		int centerX=0;
-		int centerY=0;
+		int centerX=xCenter;
+		int centerY=yCenter;
 		int aux=maxIndex+1;
 		double lastGaussAmp=300.;
 		double lastStdX=0.;
@@ -871,9 +871,19 @@ public class EventEvaluator{
 		double std1=1.;
 		double std2=1.;
 		double backgroundAvg=0.;
-		int firstCenterX,firstCenterY;
-		ArrayList<Double> stdArray=new ArrayList<Double>();
-		while(testGauss){
+		int firstCenterX=0;
+		int firstCenterY=0;
+		ArrayList<Double> stdXArray=new ArrayList<Double>();
+		ArrayList<Double> stdYArray=new ArrayList<Double>();
+		
+		int maxAmpIndex=-1;
+		double maxAmp=0.;
+		int minStdIndex=-1;
+		double minStd=0.;
+		
+		double avgR2=0.0;
+		Event event=null;
+		while(aux<=impEndFrame && testGauss){
 			double []intensitiesPatch= new double[areaSize];
 			c=0;
 			ip=is.getProcessor(aux);
@@ -883,13 +893,17 @@ public class EventEvaluator{
 					c++;
 				}
 			}
-			System.out.println("Old x center: "+xCenter+" Old y center: "+yCenter);
+			
 			for (int h=0;h<intensitiesPatch.length;h++) System.out.print(intensitiesPatch[h]+",");
-			double background=getAvgEventBackground(intensities,maxIndex-3,maxIndex+3);
-			int amp=ip.getPixel(xCenter,yCenter);
-		    LMfunc f=new Gauss2dIsotropic(patchXY,intensitiesPatch,amp-background,xCenter,yCenter,1.0,background);
-		    double[] aguess=new double[5];
-		    aguess = f.initial();
+			int endPos=maxIndex+15;
+			if (endPos<impEndFrame) endPos=impEndFrame-1;
+			double background=getAvgEventBackground(intensities,maxIndex,endPos);
+			int amp=ip.getPixel(centerX,centerY);
+			LMfunc f=new Gauss2dImproved(patchXY,intensitiesPatch,amp-background,centerX,centerY,1.0,1.0,background);
+		    //LMfunc f=new Gauss2dIsotropic(patchXY,intensitiesPatch,amp-background,centerX,centerY,1.0,background);
+		    //double[] aguess=new double[5];
+		    double[] aguess=new double[6];
+			aguess = f.initial();
 		    Object[] test = f.testdata(areaSize);
 		    double[] s= (double[]) test[3];//Weights' matrix
 		    boolean[] vary = new boolean[aguess.length];
@@ -902,133 +916,226 @@ public class EventEvaluator{
 		    
 		    
 		    try {
-		      LMIsotropic2dGaussian.solve( patchXY, aguess, intensitiesPatch, s, vary, f, 0.001, 0.01, 100, 2,limits);
+		    	//LMIsotropic2dGaussian.solve( patchXY, aguess, intensitiesPatch, s, vary, f, 0.001, 0.01, 1000, 2,limits);
+		      LMauthor.solve( patchXY, aguess, intensitiesPatch, s, vary, f, 0.001, 0.01, 500, 2,limits);
 		    }
 		    catch(Exception ex) {
 		      System.err.println("Exception caught: " + ex.getMessage());
 		      System.exit(1);
 		    }
-		    centerX=(int)(aguess[1]+0.5);
-		    centerY=(int)(aguess[2]+0.5);
-		    double r2=LMIsotropic2dGaussian.rSquared(patchXY, aguess, intensitiesPatch, s, f);
+		    //centerX=(int)(aguess[1]+0.5);
+		    //centerY=(int)(aguess[2]+0.5);
+		    centerX=(int)(aguess[2]+0.5);
+		    centerY=(int)(aguess[3]+0.5);
+		    //double r2=LMIsotropic2dGaussian.rSquared(patchXY, aguess, intensitiesPatch, s, f);
+		    double r2=LMauthor.rSquared(patchXY, aguess, intensitiesPatch, s, f);
 		    System.out.println("R2: "+r2);
-		    System.out.println("Desvest: "+aguess[0]+"Centro x: "+aguess[1]+" Centro y: "+aguess[2]+" amplitude: "+aguess[4]);
-		    if (aux==maxIndex+1){
-			    firstCenterX=(int)(aguess[1]+0.5);
-			    firstCenterY=(int)(aguess[2]+0.5);
+		    //System.out.println("Desvest: "+aguess[0]+"Centro x: "+aguess[1]+" Centro y: "+aguess[2]+" amplitude: "+aguess[4]);
+		    System.out.println("Desvestx: "+aguess[0]+"Desvesty: "+aguess[1]+"Centro x: "+aguess[2]+" Centro y: "+aguess[3]+" amplitude: "+aguess[5]);
+		    if (aux==maxIndex+1){//The first 
+		    	//if (r2<0.7) return null; //if the first vesicle, the max intensity, doesnt fit very well, we discard that vesicle
+			    //firstCenterX=(int)(aguess[1]+0.5);
+			    //firstCenterY=(int)(aguess[2]+0.5);
+		    	firstCenterX=(int)(aguess[2]+0.5);
+		    	firstCenterY=(int)(aguess[3]+0.5);
 			    std1=aguess[0]*1.5;
 			    std2=aguess[0]*3.;
-			    updateAllEventIntensities(intensities,centerX,centerY);
+		    	minStd=aguess[0];
+			    minStdIndex=aux;
+			    updateAllEventIntensities(intensities,firstCenterX,firstCenterY);
+		    }else{
+		    	if (aguess[0]<minStd){//We let a little difference possible due to docking vesicles that keep its size cuasi constant for a few frames
+		    		minStd=aguess[0];//IMPORTANT: Maybe this filter doesn't work really well, candidate to removing
+		    		minStdIndex=aux;
+		    	}
 		    }
+		    /*if (aguess[4]>maxAmp){
+	    		maxAmp=aguess[4];
+	    		maxAmpIndex=aux;
+	    	}*/
+		    if (aguess[5]>maxAmp){
+	    		maxAmp=aguess[5];
+	    		maxAmpIndex=aux;
+	    	}
 		    try{
 		    	FileWriter fstream = new FileWriter("test.txt",true);
 				PrintWriter out = new PrintWriter(fstream);
-		    	out.println("Frame aux: "+aux+" Sigma: "+aguess[0]+" x0: "+centerX+" y0: "+centerY+" b: "+aguess[3]+" amp: "+aguess[4]);
-			    out.println("Chi square: "+LMIsotropic2dGaussian.chiSquared(patchXY, aguess, intensitiesPatch, s, f));
-			    out.println("R2: "+r2);
+		    	//out.println("Traj: "+id+" Frame aux: "+aux+" Sigma: "+aguess[0]+" x0: "+centerX+" y0: "+centerY+" b: "+aguess[3]+" amp: "+aguess[4]);
+			    //out.println("Chi square: "+LMIsotropic2dGaussian.chiSquared(patchXY, aguess, intensitiesPatch, s, f));
+				out.println(" Frame aux: "+aux+" Sigmax: "+aguess[0]+"Sigmay: "+aguess[1]+" x0: "+centerX+" y0: "+centerY+" b: "+aguess[4]+" amp: "+aguess[5]);
+			    out.println("Chi square: "+LMauthor.chiSquared(patchXY, aguess, intensitiesPatch, s, f));
+				out.println("R2: "+r2);
 			    out.close();
 		    }catch(Exception e){
 				System.err.println("Error: " + e.getMessage());
 		    }
-		    if (r2>0.4 && (lastGaussAmp-aguess[4])>-10. && (aguess[0]-lastStdX)>-0.25*lastStdX && (aguess[1]-lastStdY)>-0.25*lastStdY){//change for dynamic threshold values depending on the specific situation!!!!!
+		    /*if (r2>=0.5 && (lastGaussAmp-aguess[4])>-(lastGaussAmp*0.1) && (aguess[0]-lastStd)>-(lastStd*0.25)){//change for dynamic threshold values depending on the specific situation!!!!!
 		    	lastGaussAmp=aguess[4];
-		    	lastStdX=aguess[0];
-		    	lastStdY=aguess[1];
+		    	lastStd=aguess[0];
 		    	backgroundAvg=backgroundAvg+aguess[3];
 		    	stdArray.add(aguess[0]);
 		    	aux++;
 		    }else{
 		    	testGauss=false;
+		    }*/
+		    if (r2>=0.5 && (lastGaussAmp-aguess[5])>-(lastGaussAmp*0.1) && (aguess[0]-lastStdX)>-(lastStdX*0.25) && (aguess[1]-lastStdY)>-(lastStdY*0.25)){//change for dynamic threshold values depending on the specific situation!!!!!
+		    	lastGaussAmp=aguess[5];
+		    	lastStdX=aguess[0];
+		    	lastStdY=aguess[1];
+		    	backgroundAvg=backgroundAvg+aguess[4];
+		    	stdXArray.add(aguess[0]);
+		    	stdYArray.add(aguess[1]);
+		    	avgR2=avgR2+r2;
+		    	aux++;
+		    }else{
+		    	testGauss=false;
 		    }
 		}
+		if (maxAmpIndex!=(maxIndex+1)){// || minStdIndex!=(maxIndex+1)){
+			return null;
+		}else{
 		backgroundAvg=backgroundAvg/(aux-(maxIndex+1));
 	    //int []maxIncreaseIndexes=getMaxIncreaseIndexes(intensities,maxIndex+1);
 	    //Plotting intensities code
+	    double increaseRatio=getMaxIncrease(intensities,backgroundAvg,maxIndex+1,20);
+		//System.out.println("start max, endmax: "+maxIncreaseIndexes[0]+" "+maxIncreaseIndexes[1]);
 	    
-	    
+	    avgR2=avgR2/(aux-(maxIndex+1));
 	    
 	    double[] x=new double[impEndFrame];
 	    for (int i=1;i<=impEndFrame;i++){
 	    	x[i-1]=i;
 	    }
-	    int framesFitted=aux-(maxIndex+1)+5;
+	    
+	    
+	    /*new section of code
+	    boolean nearToBg=false;
+	    while (aux!=impEndFrame && nearToBg){
+	    	aux++;
+	    	if (intensities[aux-1]<=1.2*backgroundAvg){
+	    		nearToBg=false;
+	    	}
+	    }
+	    int framesFitted=aux-(maxIndex+1);
+	    //new section of code*/
+	    int framesFitted=aux-(maxIndex+1)+10;//the original and probed line of code
+
+	    int maxLimit=maxIndex+framesFitted;
+	    if (maxLimit>=impEndFrame){
+	    	maxLimit=impEndFrame-1;
+	    	framesFitted=impEndFrame-(maxIndex+1);
+	    	}
 	    double[] xFitter=new double[framesFitted];
 	    double[] yFitter=new double[framesFitted];
-	    int maxLimit=maxIndex+framesFitted;
-	    if (maxLimit>=impEndFrame)maxLimit=impEndFrame-1;
 	    
+
 	    for (int i=maxIndex;i<maxLimit;i++){
 	    	xFitter[i-maxIndex]=i+1;
 	    	yFitter[i-maxIndex]=intensities[i];
 	    }
 	    
-	    double slopeStdFit=lineFitting(stdArray,maxIndex+1);
+	    double slopeStdXFit=lineFitting(stdXArray,maxIndex+1);
+	    double slopeStdYFit=lineFitting(stdYArray,maxIndex+1);
+	    double maxIntensity=intensities[maxIndex];
+	    
+	    double theoricalMaxInc=intensities[maxIndex]-backgroundAvg;
 	    //Ajuste exponencial
-	    if(aux-(maxIndex+1)>1 && slopeStdFit>0 ){
+	    if(aux-(maxIndex+1)>1 && (slopeStdXFit>0 || slopeStdYFit>0) && (maxIndex==0 || increaseRatio>0) && (maxIntensity>=1.5*backgroundAvg)){
 		    CurveFitter checker = new CurveFitter(xFitter, yFitter);
 			//checker.doCustomFit( "y=a*exp(b*(x-"+(startPos+1)+"))+"+String.valueOf(background), new double[]{1.0,1.0}, false);
 			checker.doCustomFit( "y=a*exp(b*(x-"+(maxIndex+1)+"))+"+backgroundAvg, new double[]{1.0,1.0}, false);
 			double gof = checker.getFitGoodness();
-			double[] expParams=new double[3];
+			double[] expParams=new double[2];
 			expParams = checker.getParams();
-			double fit[][] = new double[2][xFitter.length];
+			double fit[][] = new double[xFitter.length][2];
 			for(int i=0;i<xFitter.length;i++)
 			{
-				fit[0][i] = xFitter[i];
-				fit[1][i] = checker.f(expParams, x[i]);
+				fit[i][0] = xFitter[i];
+				fit[i][1] = checker.f(expParams, xFitter[i]);
 				//System.out.println("Exp: x->"+fit[0][i]+" y->"+fit[1][i]);
 			}
 			double tau=-1/expParams[1];
 			double amplitude=expParams[0];
-			System.out.println("Ajuste desde: "+maxIndex+" hasta "+maxLimit);
-			System.out.println(checker.getResultString());
-		    System.out.println("gof "+gof);
-		    if (gof>0.8){
+			try{
+				FileWriter fstream = new FileWriter("test.txt",true);
+				PrintWriter out = new PrintWriter(fstream);
+				out.println("Ajuste desde: "+maxIndex+" hasta "+maxLimit);
+				out.println(checker.getResultString());
+				out.println("gof "+gof);
+				out.close();
+			}
+			catch(Exception e){
+				System.err.println("Error: " + e.getMessage());
+			}
+			//int startMaxIncrease=maxIncreaseIndexes[0];
+		    //int endMaxIncrease=maxIncreaseIndexes[1];
+		    //double increaseRatio=-1;
+		    //if (maxIndex!=0)increaseRatio=(intensities[endMaxIncrease]-intensities[startMaxIncrease])/(endMaxIncrease-startMaxIncrease);
+		    if ((maxIndex==0 && gof>=0.85) || (maxIndex!=0 && gof>=0.75)){// && framesFitted<=tau){// && (maxIndex==0 || increaseRatio>10)){
 		    	System.out.println("Esto hipotéticamente es un evento de fusión :), tau: "+tau+" amp: "+amplitude);
-		    }
-		    
-		    
-		    int r1=(int)(std1+0.5);
-		    int r2=(int)(std2+0.5);
-		    double [] intensities2=new double[impEndFrame];
-		    int x2_1=centerX-r2;
-		    int x2_2=centerX+r2;
-		    int y2_1=centerY-r2;
-		    int y2_2=centerY+r2;
-		    double r2cuad=r2*r2;
-		    double r1cuad=r1*r1;
-		    double xaux,yaux;
-		    double sumcuad;
-		    int npixels;
-		    for (int f=1;f<impEndFrame;f++){
-		    	npixels=0;
-		    	ip=is.getProcessor(f);
-			    for (int xi=x2_1;xi<=x2_2;xi++){
-			    	for (int yi=y2_1;yi<=y2_2;yi++){
-			    		xaux=xi-centerX;
-			    		yaux=yi-centerY;
-			    		sumcuad=(xaux*xaux)+(yaux*yaux);
-			    		if (sumcuad>r1cuad && sumcuad<r2cuad ){
-			    			intensities2[f-1]=intensities2[f-1]+ip.getPixel(xi, yi);
-			    			npixels++;
-			    			//System.out.println("Pixel2 "+"xi: "+xi+" yi: "+yi);
-			    		}
-			    	}
+		    	
+		    	event=new Event(0,lastStdX,lastStdY,firstCenterX,firstCenterY,maxIndex,maxIndex+(int)(tau+0.5),amplitude,tau,0,intensities,fit);
+		    	
+			    //this code was originally on line 1220
+			    int r1=(int)(std1+0.5);
+			    int r2=(int)(std2+0.5);
+			    double [] intensities2=new double[impEndFrame];
+			    double [] vesicleIntensities=new double[impEndFrame];
+			    int x2_1=centerX-r2;
+			    int x2_2=centerX+r2;
+			    int y2_1=centerY-r2;
+			    int y2_2=centerY+r2;
+			    double r2cuad=r2*r2;
+			    double r1cuad=r1*r1;
+			    double xaux,yaux;
+			    double sumcuad;
+			    int npixels;
+			    int vesiclenpix;
+			    for (int f=1;f<impEndFrame;f++){
+			    	npixels=0;
+			    	vesiclenpix=0;
+			    	ip=is.getProcessor(f);
+				    for (int xi=x2_1;xi<=x2_2;xi++){
+				    	for (int yi=y2_1;yi<=y2_2;yi++){
+				    		xaux=xi-centerX;
+				    		yaux=yi-centerY;
+				    		sumcuad=(xaux*xaux)+(yaux*yaux);
+				    		if (sumcuad>r1cuad && sumcuad<r2cuad ){
+				    			intensities2[f-1]=intensities2[f-1]+ip.getPixel(xi, yi);
+				    			npixels++;
+				    			//System.out.println("Pixel2 "+"xi: "+xi+" yi: "+yi);
+				    		}else{
+				    			if (sumcuad<=r1cuad){
+				    				vesicleIntensities[f-1]=vesicleIntensities[f-1]+ip.getPixel(xi, yi);
+				    				vesiclenpix++;
+				    			}
+				    		}
+				    	}
+				    }
+				    intensities2[f-1]=intensities2[f-1]/npixels;
+				    vesicleIntensities[f-1]=vesicleIntensities[f-1]/vesiclenpix;
 			    }
-			    intensities2[f-1]=intensities2[f-1]/npixels;
+			    //
+			    
+			    PlotWindow.noGridLines = false;
+			    //Plot plot = new Plot("Trajectory: "+traj.getId(),"X Axis","Y Axis",completeX,completeY);
+				Plot plot = new Plot(" prob: "+(avgR2*gof)+" r2: "+avgR2+" gof: "+gof+" x: "+centerX+" y: "+centerY+" pendiente inc: "+increaseRatio,"X Axis","Y Axis",x,intensities);
+			    //Plot plot = new Plot(" x: "+centerX+" y: "+centerY,"X Axis","Y Axis",x,intensities);
+			    plot.setLimits(0, impEndFrame, 0, 255);
+			    plot.setLineWidth(1);
+			    plot.setColor(Color.red);
+			    //plot.addPoints(xFitter,yFit,PlotWindow.LINE);
+			    plot.drawLine(1, backgroundAvg, impEndFrame, backgroundAvg);
+			    plot.show();
+			    //End plotting code
 		    }
-		    PlotWindow.noGridLines = false;
-		    //Plot plot = new Plot("Trajectory: "+traj.getId(),"X Axis","Y Axis",completeX,completeY);
-			/*Plot plot = new Plot(" x: "+centerX+" y: "+centerY+" max increase indexes: "+maxIncreaseIndexes[0]+" "+maxIncreaseIndexes[1],"X Axis","Y Axis",x,intensities);
-		    plot.setLimits(0, impEndFrame, -255, 255);
-		    plot.setLineWidth(1);
-		    plot.setColor(Color.red);
-		    plot.addPoints(x,intensities2,PlotWindow.LINE);
-		    //plot.drawLine(1, aguess[4], impEndFrame, aguess[4]);
-		    plot.show();
-		    //End plotting code*/
-	}
-		
+		    
+		    
+	    }  
+		    
+	
+	return event;
+	}			
 		
 	}
 	
@@ -1268,10 +1375,11 @@ public class EventEvaluator{
 			double gof = checker.getFitGoodness();
 			double[] expParams=new double[2];
 			expParams = checker.getParams();
-			double yFit[] = new double[xFitter.length];
+			double fit[][] = new double[xFitter.length][2];
 			for(int i=0;i<xFitter.length;i++)
 			{
-				yFit[i] = checker.f(expParams, xFitter[i]);
+				fit[i][0] = xFitter[i];
+				fit[i][1] = checker.f(expParams, xFitter[i]);
 				//System.out.println("Exp: x->"+fit[0][i]+" y->"+fit[1][i]);
 			}
 			double tau=-1/expParams[1];
@@ -1294,7 +1402,7 @@ public class EventEvaluator{
 		    if ((maxIndex==0 && gof>=0.85) || (maxIndex!=0 && gof>=0.75)){// && framesFitted<=tau){// && (maxIndex==0 || increaseRatio>10)){
 		    	System.out.println("Esto hipotéticamente es un evento de fusión :), tau: "+tau+" amp: "+amplitude);
 		    	
-		    	event=new Event(id,lastStdX,lastStdY,firstCenterX,firstCenterY,startFrame,startFrame+(int)(tau+0.5),amplitude,tau,0,intensities);
+		    	event=new Event(id,lastStdX,lastStdY,firstCenterX,firstCenterY,startFrame,startFrame+(int)(tau+0.5),amplitude,tau,0,intensities,fit);
 		    	
 			    //this code was originally on line 1220
 			    int r1=(int)(std1+0.5);
@@ -1344,7 +1452,7 @@ public class EventEvaluator{
 			    plot.setLimits(0, impEndFrame, 0, 255);
 			    plot.setLineWidth(1);
 			    plot.setColor(Color.red);
-			    plot.addPoints(xFitter,yFit,PlotWindow.LINE);
+			    //plot.addPoints(xFitter,yFit,PlotWindow.LINE);
 			    plot.drawLine(1, backgroundAvg, impEndFrame, backgroundAvg);
 			    plot.show();
 			    //End plotting code

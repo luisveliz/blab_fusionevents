@@ -11,6 +11,7 @@ public class FusionEvents {
 	GUI_InputParameters gui_input;
 	EventEvaluator eventEvaluator;
 	EventSet eventSet;
+	int lastEventIndex=0;
 	
 	
 	public FusionEvents(Thinker thinker){
@@ -41,7 +42,7 @@ public class FusionEvents {
 		
 		eventSet = new EventSet();
 		System.out.println("Number of trajs: "+trajSet.getNumOfTrajs());
-		int eventIndex=0;
+		//int eventIndex=0;
 		for(int i=0; i< trajSet.getNumOfTrajs(); i++){
 			
 			Event event = eventEvaluator.evaluateImproved(trajSet.getTraj(i));
@@ -50,9 +51,9 @@ public class FusionEvents {
 				eventSet.addEvent(event);
 				System.out.println(event.getTau()+"tau evento");
 				gui_fusionevents.addRowInFETableModel(
-						new Object[]{eventIndex,
+						new Object[]{lastEventIndex,
 									event.getTau(),event.getAmplitude()});
-				eventIndex++;
+				lastEventIndex++;
 				
 				
 			}
@@ -66,8 +67,25 @@ public class FusionEvents {
 		
 	}
 	
+	public Event evaluateSelectedArea(int x1, int y1, int x2, int y2){
+		Event event=eventEvaluator.evaluateSelectedArea(x1, y1, x2, y2);
+		if (event!=null){
+			eventSet.addEvent(event);
+			System.out.println(event.getTau()+"tau evento");
+			gui_fusionevents.addRowInFETableModel(
+					new Object[]{lastEventIndex,
+								event.getTau(),event.getAmplitude()});
+			lastEventIndex++;
+		}
+		return event;
+	}
+	
 	public EventSet getEventSet(){
 		return eventSet;
+	}
+	
+	public void deleteEvent(int indexEvent){
+		eventSet.deleteEvent(indexEvent);
 	}
 	
 	public GUI_FusionEvents getFusionEventsGUI(){
@@ -77,5 +95,6 @@ public class FusionEvents {
 	public EventEvaluator getEventEvaluator(){
 		return eventEvaluator;
 	}
+	
 
 }

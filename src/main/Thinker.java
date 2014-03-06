@@ -18,6 +18,10 @@ import info.GlobalInfo;
 
 import java.util.ArrayList;
 
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.data.statistics.HistogramDataset;
+import org.jfree.data.statistics.HistogramType;
+
 import bTools.BNF;
 import loader.FileLoader;
 import overTime.OverTime;
@@ -838,6 +842,12 @@ public class Thinker
  		return fusionEvents;
  	}
  	
+ 	public void deleteSelectedEvent(int eventIndex){
+ 		fusionEvents.deleteEvent(eventIndex);
+ 		fusionEvents.getFusionEventsGUI().deleteRow(eventIndex);
+ 		updateEventSetToCanvasAfterDeleting();
+ 	}
+ 	
  	public void showEventInfo(int eventIndex){
  		int nFrames=fusionEvents.getEventEvaluator().getImpEndFrame();
  		double time[]=new double[nFrames];
@@ -846,8 +856,9 @@ public class Thinker
  			time[i-1]=i;
  		}
  		System.out.println("Evento de traj "+eventSelected.getId());
- 		//fusionEvents.getFusionEventsGUI().getJFreeChartIntVsTime().setTime(time);
+ 		fusionEvents.getFusionEventsGUI().getJFreeChartIntVsTime().setTime(time);
 		fusionEvents.getFusionEventsGUI().getJFreeChartIntVsTime().setMeanIntensity(eventSelected.getIntensities());
+		fusionEvents.getFusionEventsGUI().getJFreeChartIntVsTime().addFit(eventSelected.getExpFit());
 		fusionEvents.getFusionEventsGUI().getJFreeChartIntVsTime().update();
  	}
  	
@@ -860,20 +871,44 @@ public class Thinker
  		
  	}
  	
- 	public void manualFeSearch(){
- 		Roi selectedRoi=this.particleTracker.trajectories_stack_window.getSelectedRoi();
+ 	public void manualFeSearch(){//TO DO: adding investigator option that can do a manual fitting of the intensity chart in case that this analysis dont deliver a positive event
+ 		Roi selectedRoi=particleTracker.trajectories_stack_window.getSelectedRoi();
  		if (selectedRoi!=null){
 	 		int x1=(int)(selectedRoi.getBounds().getMinX()+0.5);
 	 		int y1=(int)(selectedRoi.getBounds().getMinY()+0.5);
 	 		int x2=(int)(selectedRoi.getBounds().getMaxX()+0.5);
 	 		int y2=(int)(selectedRoi.getBounds().getMaxY()+0.5);
-	 		this.fusionEvents.getEventEvaluator().evaluateSelectedArea(x1, y1, x2, y2);
-	 		
+	 		Event eventEvaluated=fusionEvents.evaluateSelectedArea(x1, y1, x2, y2);
+	 		if (eventEvaluated!=null){ 
+	 			EventSet eventSet=fusionEvents.getEventSet();
+	 			int lastIndex=getParticleTracker().getTrajectoryCanvas().updateEventSetAfterAdding(eventSet);
+	 			fusionEvents.getFusionEventsGUI().automaticRowSelection(lastIndex);
+	 			showEventInfo(lastIndex);
+	 			showEventSelectedInCanvas(lastIndex);
+	 			
+	 		}
  		}else{
  			IJ.showMessage("You must select an area to analize it");
  		}
  	}
+ 	
+ 	public void updateEventSetToCanvasAfterDeleting(){
+ 		EventSet eventSet=fusionEvents.getEventSet();
+ 		getParticleTracker().getTrajectoryCanvas().updateEventSetAfterDeleting(eventSet);
+ 		
+ 	}
 	
+ 	public void generateHistogram(){
+ 		EventSet eventSet=fusionEvents.getEventSet();
+ 		int eventSetSize=eventSet.getNumberOfEvents();
+ 		double[] tauArray=new double[eventSetSize];
+ 		for (int i=0;i<eventSetSize;i++){
+ 			tauArray[i]=eventSet.getEvent(i).getTau();
+ 		}
+ 		if (eventSetSize!=0){
+	        fusionEvents.getFusionEventsGUI().plotHistogram(tauArray,5);
+	    }
+ 	}
 	
 	
 	

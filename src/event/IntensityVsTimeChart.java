@@ -147,7 +147,7 @@ public class IntensityVsTimeChart extends JFreeChart
 			{
 				intensityFitC.addSeries(intensityFit.get(i));
 				lineRenderer.setSeriesShapesVisible(i, false);
-				lineRenderer.setSeriesPaint(i, Color.BLACK);
+				lineRenderer.setSeriesPaint(i, Color.GREEN);
 			}
 		
 		
@@ -198,18 +198,23 @@ public class IntensityVsTimeChart extends JFreeChart
 			this.intensity.add(time[i],intensity[i]);
 	}
 	
-	public void addFit(double[] x, double[] fit)
+	public void addFit(double[][] fit)
 	{
 		XYSeries xyfit = new XYSeries("Fit");
-		for(int i=0;i < x.length;i++)
-			xyfit.add(x[i],fit[i]);
+		clearFits();
+		for(int i=0;i < fit.length;i++)
+			xyfit.add(fit[i][0],fit[i][1]);
 		intensityFit.add(xyfit);
 	}
+	
 	public void clearFits()
 	{
 		intensityFit.clear();
 	}
 
+	public void setTime(double[] time){
+		this.time=time;
+	}
 
 	
 }
