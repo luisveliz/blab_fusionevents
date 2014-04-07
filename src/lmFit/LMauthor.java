@@ -179,7 +179,7 @@ public final class LMauthor
 	    int term = 0;	// termination count test/
 	    
 	    do 
-	    {	if (a[0]<=0.5 || a[1]<=0.5 || a[5]<=0 || a[5]>270 || a[2]< limits[0] || a[2]>limits[1] || a[3]<limits[2] || a[3]>limits[3]){
+	    {	if (a[0]<0.75 || a[1]<0.75 || a[5]<=0 || a[5]>270 || a[2]< limits[0] || a[2]>limits[1] || a[3]<limits[2] || a[3]>limits[3]){
 	    		System.out.println("Exception avoided");
 	    		done=true;
     		}else{

@@ -10,7 +10,7 @@ import lmFit.LMauthor;
 import lmFit.LMfunc;
 import particleTracker.ParticleDetector;
 import visualization.PreviewCanvas;
-import bTools.BMaths;
+import bTools.BMaths; 
 import data.Frame;
 import data.Particle;
 import data.Trajectory;
@@ -33,20 +33,24 @@ public class EventEvaluator{
 	private int deltaWindow;
 	private int areaRadius;
 	private int fitPatchSize;
-	private int timeFrames;
+	private double timeFrames;
+	private double minIntensityIncrease;
+	private ArrayList<Double> nonFusionedIntArray;
+	private double maxIntThreshold;
 	
 	private int impEndFrame; //Actual length of the movie.
 	
 	private StackWindow stack_window;
 	private PreviewCanvas pc;
 	
-	public EventEvaluator(ImagePlus imp, int limitRadius, int deltaWindow,int areaRadius,int fitPatchSize,int time){
+	public EventEvaluator(ImagePlus imp, int limitRadius, int deltaWindow,int areaRadius,int fitPatchSize,double time, double minIntInc){
 		this.imp=imp;
 		this.limitRadius=limitRadius;
 		this.deltaWindow=deltaWindow;
 		this.areaRadius=areaRadius;
 		this.fitPatchSize=(fitPatchSize-1)/2;
 		this.timeFrames=time;
+		this.minIntensityIncrease=minIntInc;
 		
 		
 		//Checking which is the biggest one, NSlices or NFrames.
@@ -79,6 +83,19 @@ public class EventEvaluator{
 	
 	public int getImpEndFrame(){
 		return impEndFrame;
+	}
+	
+	public void addNonFusionedVesicle(double avgVesicleInt){
+		nonFusionedIntArray.add(avgVesicleInt);
+	}
+	
+	public void setMaxIntThreshold(){
+		double avgInt=0.;
+		int length=nonFusionedIntArray.size();
+		for (int i=0;i<length;i++){
+			avgInt+=nonFusionedIntArray.get(i);
+		}
+		this.maxIntThreshold=avgInt/length;
 	}
 	
 	/*public Event evaluate(Trajectory traj){
@@ -756,7 +773,8 @@ public class EventEvaluator{
 		double maxIntensity=-1.0;
 		int maxIndex=-1;
 		for (int i=startFrame-1;i<endFrame;i++){
-			if (intensities[i]>=maxIntensity){
+			//Before it was >= the sign of the comparision
+			if (intensities[i]>maxIntensity){
 				maxIntensity=intensities[i];
 				maxIndex=i;
 			}
@@ -793,7 +811,7 @@ public class EventEvaluator{
 		System.out.println("Actualicé centro del evento a x: "+xEvent+" y: "+yEvent);
 	}
 	
-	public double getMaxIncrease(double [] intensities, double background,  int frameStart, int nPreviousFrames){
+	public double[] getMaxIncrease(double [] intensities, double background,  int frameStart, int nPreviousFrames){
 		double maxIncrease=-1;
 		int startIndex=frameStart-nPreviousFrames-1;
 		if (startIndex<1) startIndex=1;
@@ -803,17 +821,19 @@ public class EventEvaluator{
 		double currentIncrease=0.;
 		double delta=0.;
 		double theoricalIncrease=intensities[frameStart-1]-background;
-		double subitDelta=theoricalIncrease/4;
+		//double subitDelta=theoricalIncrease/4;
+		//it was 0.5 originally
 		double theoricalRatioInc=0.5;
-		boolean subitIncrease=false;
+		//boolean subitIncrease=false;
 		for (int i=startIndex;i<(frameStart-1);i++){
 			//if (intensities[i]<=1.25*background) theoricalStart=true;
 			//if (theoricalStart){
 				delta=intensities[i+1]-intensities[i];
-				if (delta>-0.05*theoricalIncrease){
+				//if (delta>-1.0*theoricalRatioInc*theoricalIncrease){
+				if (delta>0.){
 					currentIncrease=currentIncrease+delta;
 					if (currentIncrease>=maxIncrease){
-						if (delta>=subitDelta) subitIncrease=true;
+						//if (delta>=subitDelta) subitIncrease=true;
 						maxIncrease=currentIncrease;
 						startIncrease=startCurrentInc;
 						endIncrease=i+1;
@@ -825,11 +845,25 @@ public class EventEvaluator{
 			//}
 		}
 		int frameDiff=endIncrease-startIncrease;
-		if (frameDiff==0) return -1.0;
-		if (!subitIncrease) return -1.0;
-		double increaseRatio=(intensities[endIncrease]-intensities[startIncrease]);///frameDiff;
-		if (increaseRatio<theoricalRatioInc*theoricalIncrease || increaseRatio<20)  increaseRatio=-1;
-		return increaseRatio;
+		
+		if (frameDiff==0) return new double[] {-1.0,-1.0};
+		//if (!subitIncrease) return -1.0;
+		double increase=(intensities[endIncrease]-intensities[startIncrease]);///frameDiff;
+		double increaseRatio= increase/frameDiff;
+		
+		try{
+			FileWriter fstream = new FileWriter("test.txt",true);
+			PrintWriter out = new PrintWriter(fstream);
+			out.println("Frame start: "+ frameStart+" Inicio incremento: "+startIncrease+" final incremento: "+endIncrease+"incremento "+increase);
+			out.close();
+		}catch(Exception e){
+			System.err.println("Error: " + e.getMessage());
+		}
+		if (increase<theoricalRatioInc*theoricalIncrease || increase<20)  {
+			increase=-1;
+			increaseRatio=-1;
+		}
+		return new double[] {increase,increaseRatio};
 	}
 	
 	public Event evaluateSelectedArea(int x1, int y1, int x2, int y2){
@@ -997,10 +1031,14 @@ public class EventEvaluator{
 		backgroundAvg=backgroundAvg/(aux-(maxIndex+1));
 	    //int []maxIncreaseIndexes=getMaxIncreaseIndexes(intensities,maxIndex+1);
 	    //Plotting intensities code
-	    double increaseRatio=getMaxIncrease(intensities,backgroundAvg,maxIndex+1,20);
+		double [] increaseData=new double[2];
+		increaseData=getMaxIncrease(intensities,backgroundAvg,maxIndex+1,maxIndex);
+		double increase=increaseData[0];
+	    double increaseRatio=increaseData[1];
 		//System.out.println("start max, endmax: "+maxIncreaseIndexes[0]+" "+maxIncreaseIndexes[1]);
 	    
 	    avgR2=avgR2/(aux-(maxIndex+1));
+	    
 	    
 	    double[] x=new double[impEndFrame];
 	    for (int i=1;i<=impEndFrame;i++){
@@ -1040,7 +1078,7 @@ public class EventEvaluator{
 	    
 	    double theoricalMaxInc=intensities[maxIndex]-backgroundAvg;
 	    //Ajuste exponencial
-	    if(aux-(maxIndex+1)>1 && (slopeStdXFit>0 || slopeStdYFit>0) && (maxIndex==0 || increaseRatio>0) && (maxIntensity>=1.5*backgroundAvg)){
+	    if(aux-(maxIndex+1)>1 && (slopeStdXFit>0 || slopeStdYFit>0) && (maxIndex==0 || increaseRatio>2) && (maxIntensity>=1.5*backgroundAvg)){
 		    CurveFitter checker = new CurveFitter(xFitter, yFitter);
 			//checker.doCustomFit( "y=a*exp(b*(x-"+(startPos+1)+"))+"+String.valueOf(background), new double[]{1.0,1.0}, false);
 			checker.doCustomFit( "y=a*exp(b*(x-"+(maxIndex+1)+"))+"+backgroundAvg, new double[]{1.0,1.0}, false);
@@ -1203,6 +1241,7 @@ public class EventEvaluator{
 		int firstCenterY=0;
 		ArrayList<Double> stdXArray=new ArrayList<Double>();
 		ArrayList<Double> stdYArray=new ArrayList<Double>();
+		ArrayList<Double> ampArray=new ArrayList<Double>();
 		ImageStack is=imp.getImageStack();
 		ImageProcessor ip;
 		
@@ -1225,9 +1264,9 @@ public class EventEvaluator{
 			}
 			
 			for (int h=0;h<intensitiesPatch.length;h++) System.out.print(intensitiesPatch[h]+",");
-			double background=getAvgEventBackground(intensities,maxIndex,endPos);
+			double background=getAvgEventBackground(intensities,maxIndex, impEndFrame);
 			int amp=ip.getPixel(centerX,centerY);
-			LMfunc f=new Gauss2dImproved(patchXY,intensitiesPatch,amp-background,centerX,centerY,1.0,1.0,background);
+			LMfunc f=new Gauss2dImproved(patchXY,intensitiesPatch,amp-background,centerX,centerY,1.5,1.5,background);
 		    //LMfunc f=new Gauss2dIsotropic(patchXY,intensitiesPatch,amp-background,centerX,centerY,1.0,background);
 		    //double[] aguess=new double[5];
 		    double[] aguess=new double[6];
@@ -1245,7 +1284,7 @@ public class EventEvaluator{
 		    
 		    try {
 		    	//LMIsotropic2dGaussian.solve( patchXY, aguess, intensitiesPatch, s, vary, f, 0.001, 0.01, 1000, 2,limits);
-		      LMauthor.solve( patchXY, aguess, intensitiesPatch, s, vary, f, 0.001, 0.01, 500, 2,limits);
+		      LMauthor.solve( patchXY, aguess, intensitiesPatch, s, vary, f, 0.001, 0.01, 1000, 2,limits);
 		    }
 		    catch(Exception ex) {
 		      System.err.println("Exception caught: " + ex.getMessage());
@@ -1281,16 +1320,21 @@ public class EventEvaluator{
 	    		maxAmp=aguess[4];
 	    		maxAmpIndex=aux;
 	    	}*/
-		    if (aguess[5]>maxAmp){
+		    //Official code, remove the comments and remove the next if
+		    /*if (aguess[5]>maxAmp){
 	    		maxAmp=aguess[5];
 	    		maxAmpIndex=aux;
-	    	}
+	    	}*/
+		    if (intensities[aux-1]>maxAmp){
+		    	maxAmp=intensities[aux-1];
+		    	maxAmpIndex=aux;
+		    }
 		    try{
 		    	FileWriter fstream = new FileWriter("test.txt",true);
 				PrintWriter out = new PrintWriter(fstream);
 		    	//out.println("Traj: "+id+" Frame aux: "+aux+" Sigma: "+aguess[0]+" x0: "+centerX+" y0: "+centerY+" b: "+aguess[3]+" amp: "+aguess[4]);
 			    //out.println("Chi square: "+LMIsotropic2dGaussian.chiSquared(patchXY, aguess, intensitiesPatch, s, f));
-				out.println("Traj: "+id+" Frame aux: "+aux+" Sigmax: "+aguess[0]+"Sigmay: "+aguess[1]+" x0: "+centerX+" y0: "+centerY+" b: "+aguess[4]+" amp: "+aguess[5]);
+				out.println("Traj: "+id+" Frame aux: "+aux+" Sigmax: "+aguess[0]+"Sigmay: "+aguess[1]+" x0: "+centerX+" y0: "+centerY+" b: "+aguess[4]+" amp: "+intensities[aux-1]);
 			    out.println("Chi square: "+LMauthor.chiSquared(patchXY, aguess, intensitiesPatch, s, f));
 				out.println("R2: "+r2);
 			    out.close();
@@ -1306,29 +1350,38 @@ public class EventEvaluator{
 		    }else{
 		    	testGauss=false;
 		    }*/
-		    if (r2>=0.5 && (lastGaussAmp-aguess[5])>-(lastGaussAmp*0.1) && (aguess[0]-lastStdX)>-(lastStdX*0.25) && (aguess[1]-lastStdY)>-(lastStdY*0.25)){//change for dynamic threshold values depending on the specific situation!!!!!
-		    	lastGaussAmp=aguess[5];
+		    
+		    //this is the official piece of code
+		    if (r2>=0.4){// && (lastGaussAmp-aguess[5])>-(lastGaussAmp*0.1) && (aguess[0]-lastStdX)>-(lastStdX*0.25) && (aguess[1]-lastStdY)>-(lastStdY*0.25)){//change for dynamic threshold values depending on the specific situation!!!!!
+		    	//Next line is the original, remove the comments
+		    	//lastGaussAmp=aguess[5];
+		    	lastGaussAmp=intensities[aux-1];
 		    	lastStdX=aguess[0];
 		    	lastStdY=aguess[1];
 		    	backgroundAvg=backgroundAvg+aguess[4];
 		    	stdXArray.add(aguess[0]);
 		    	stdYArray.add(aguess[1]);
+		    	ampArray.add(aguess[5]);
 		    	avgR2=avgR2+r2;
 		    	aux++;
 		    }else{
 		    	testGauss=false;
 		    }
 		}
-		if (maxAmpIndex!=(maxIndex+1)){// || minStdIndex!=(maxIndex+1)){
-			return null;
-		}else{
+		/*if (maxAmpIndex!=(maxIndex+1)){// || minStdIndex!=(maxIndex+1)){//Original piece of code 
+			return null;*/
+		//}else{
 		backgroundAvg=backgroundAvg/(aux-(maxIndex+1));
 	    //int []maxIncreaseIndexes=getMaxIncreaseIndexes(intensities,maxIndex+1);
 	    //Plotting intensities code
-	    double increaseRatio=getMaxIncrease(intensities,backgroundAvg,maxIndex+1,20);
+		double [] increaseData=getMaxIncrease(intensities,backgroundAvg,maxIndex+1,maxIndex);
+		double increase=increaseData[0];
+	    double increaseRatio=increaseData[1];
+	    
 		//System.out.println("start max, endmax: "+maxIncreaseIndexes[0]+" "+maxIncreaseIndexes[1]);
 	    
 	    avgR2=avgR2/(aux-(maxIndex+1));
+	    
 	    
 	    double[] x=new double[impEndFrame];
 	    for (int i=1;i<=impEndFrame;i++){
@@ -1352,7 +1405,7 @@ public class EventEvaluator{
 	    if (maxLimit>=impEndFrame){
 	    	maxLimit=impEndFrame-1;
 	    	framesFitted=impEndFrame-(maxIndex+1);
-	    	}
+	    }
 	    double[] xFitter=new double[framesFitted];
 	    double[] yFitter=new double[framesFitted];
 	    
@@ -1367,104 +1420,178 @@ public class EventEvaluator{
 	    double maxIntensity=intensities[maxIndex];
 	    
 	    double theoricalMaxInc=intensities[maxIndex]-backgroundAvg;
+	    
+	    //code added for tests
+	    try{
+	    	FileWriter fstream = new FileWriter("test.txt",true);
+			PrintWriter out = new PrintWriter(fstream);
+			out.println("Increase: "+Double.toString(increaseRatio)+" number of frames: "+(aux-(maxIndex+1))+" frames hacia atrás: "+maxIndex);
+			out.close();
+	    }catch(Exception e){
+			System.err.println("Error: " + e.getMessage());
+	    }
+	    
+	    //end added code
+	    
 	    //Ajuste exponencial
-	    if(aux-(maxIndex+1)>1 && (slopeStdXFit>0 || slopeStdYFit>0) && (maxIndex==0 || increaseRatio>0) && (maxIntensity>=1.5*backgroundAvg)){
-		    CurveFitter checker = new CurveFitter(xFitter, yFitter);
-			//checker.doCustomFit( "y=a*exp(b*(x-"+(startPos+1)+"))+"+String.valueOf(background), new double[]{1.0,1.0}, false);
-			checker.doCustomFit( "y=a*exp(b*(x-"+(maxIndex+1)+"))+"+backgroundAvg, new double[]{1.0,1.0}, false);
-			double gof = checker.getFitGoodness();
-			double[] expParams=new double[2];
-			expParams = checker.getParams();
-			double fit[][] = new double[xFitter.length][2];
-			for(int i=0;i<xFitter.length;i++)
-			{
-				fit[i][0] = xFitter[i];
-				fit[i][1] = checker.f(expParams, xFitter[i]);
-				//System.out.println("Exp: x->"+fit[0][i]+" y->"+fit[1][i]);
-			}
-			double tau=-1/expParams[1];
-			double amplitude=expParams[0];
-			try{
-				FileWriter fstream = new FileWriter("test.txt",true);
-				PrintWriter out = new PrintWriter(fstream);
-				out.println("Ajuste desde: "+maxIndex+" hasta "+maxLimit);
-				out.println(checker.getResultString());
-				out.println("gof "+gof);
-				out.close();
-			}
-			catch(Exception e){
-				System.err.println("Error: " + e.getMessage());
-			}
-			//int startMaxIncrease=maxIncreaseIndexes[0];
-		    //int endMaxIncrease=maxIncreaseIndexes[1];
-		    //double increaseRatio=-1;
-		    //if (maxIndex!=0)increaseRatio=(intensities[endMaxIncrease]-intensities[startMaxIncrease])/(endMaxIncrease-startMaxIncrease);
-		    if ((maxIndex==0 && gof>=0.85) || (maxIndex!=0 && gof>=0.75)){// && framesFitted<=tau){// && (maxIndex==0 || increaseRatio>10)){
-		    	System.out.println("Esto hipotéticamente es un evento de fusión :), tau: "+tau+" amp: "+amplitude);
-		    	
-		    	event=new Event(id,lastStdX,lastStdY,firstCenterX,firstCenterY,startFrame,startFrame+(int)(tau+0.5),amplitude,tau,0,intensities,fit);
-		    	
-			    //this code was originally on line 1220
-			    int r1=(int)(std1+0.5);
-			    int r2=(int)(std2+0.5);
-			    double [] intensities2=new double[impEndFrame];
-			    double [] vesicleIntensities=new double[impEndFrame];
-			    int x2_1=centerX-r2;
-			    int x2_2=centerX+r2;
-			    int y2_1=centerY-r2;
-			    int y2_2=centerY+r2;
-			    double r2cuad=r2*r2;
-			    double r1cuad=r1*r1;
-			    double xaux,yaux;
-			    double sumcuad;
-			    int npixels;
-			    int vesiclenpix;
-			    for (int f=1;f<impEndFrame;f++){
-			    	npixels=0;
-			    	vesiclenpix=0;
-			    	ip=is.getProcessor(f);
-				    for (int xi=x2_1;xi<=x2_2;xi++){
-				    	for (int yi=y2_1;yi<=y2_2;yi++){
-				    		xaux=xi-centerX;
-				    		yaux=yi-centerY;
-				    		sumcuad=(xaux*xaux)+(yaux*yaux);
-				    		if (sumcuad>r1cuad && sumcuad<r2cuad ){
-				    			intensities2[f-1]=intensities2[f-1]+ip.getPixel(xi, yi);
-				    			npixels++;
-				    			//System.out.println("Pixel2 "+"xi: "+xi+" yi: "+yi);
-				    		}else{
-				    			if (sumcuad<=r1cuad){
-				    				vesicleIntensities[f-1]=vesicleIntensities[f-1]+ip.getPixel(xi, yi);
-				    				vesiclenpix++;
-				    			}
-				    		}
-				    	}
-				    }
-				    intensities2[f-1]=intensities2[f-1]/npixels;
-				    vesicleIntensities[f-1]=vesicleIntensities[f-1]/vesiclenpix;
+	    if(aux-(maxIndex+1)>1){// && (maxIndex==0 || increaseRatio>0)){//&& (slopeStdXFit>0 || slopeStdYFit>0) && (maxIntensity>=1.5*backgroundAvg)){
+	    		    
+	    	boolean isDocking=dockingTest(xFitter,yFitter,maxIndex,stdXArray.size(),slopeStdXFit,slopeStdYFit);
+		    if (isDocking && increaseRatio>2){
+		    	try{
+			    	FileWriter fstream = new FileWriter("test.txt",true);
+					PrintWriter out = new PrintWriter(fstream);
+					out.println("ES DOCKING !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+					out.close();
+			    }catch(Exception e){
+					System.err.println("Error: " + e.getMessage());
 			    }
-			    //
+		    	double convertedAmplitude=BMaths.roundDouble(intensities[maxIndex]/backgroundAvg, 5);
+		    	if (convertedAmplitude>=minIntensityIncrease){
+		    		event=new Event(id,lastStdX,lastStdY,firstCenterX,firstCenterY,startFrame,startFrame,convertedAmplitude,0,0,intensities,null);
+		    		return event;
+		    	}else{
+		    		return null;
+		    	}
+		    }else{
+	    	int isNormalFE=isNormalFE(maxIndex,stdXArray,stdYArray,ampArray);
+	    	if (isNormalFE>0){
+	    		try{
+			    	FileWriter fstream = new FileWriter("test.txt",true);
+					PrintWriter out = new PrintWriter(fstream);
+					out.println("Frames de puff: "+isNormalFE);
+					out.close();
+			    }catch(Exception e){
+					System.err.println("Error: " + e.getMessage());
+			    }
+	    		CurveFitter checker;
+		    	if (isNormalFE==yFitter.length){
+		    		checker = new CurveFitter(xFitter, yFitter);
+		    	}
+		    	else{
+		    		framesFitted=isNormalFE+10;
+		    		maxLimit=maxIndex+isNormalFE+10;
+		    		if (maxLimit>=impEndFrame){
+		    	    	maxLimit=impEndFrame-1;
+		    	    	framesFitted=impEndFrame-(maxIndex+1);
+		    	    	}
+		    		double[] xFitterCut=new double[framesFitted];
+		    		for(int i=0;i<framesFitted;i++){
+		    			xFitterCut[i]=xFitter[i];
+		    		}
+		    		double[] yFitterCut=new double[isNormalFE+10];
+		    		for(int j=0;j<framesFitted;j++){
+		    			yFitterCut[j]=yFitter[j];
+		    		}
+		    		
+		    		checker = new CurveFitter(xFitterCut, yFitterCut);
+		    	}
+				//checker.doCustomFit( "y=a*exp(b*(x-"+(startPos+1)+"))+"+String.valueOf(background), new double[]{1.0,1.0}, false);
+				checker.doCustomFit( "y=a*exp(b*(x-"+(maxIndex+1)+"))+"+backgroundAvg, new double[]{1.0,1.0}, false);
+				double gof = checker.getFitGoodness();
+				double[] expParams=new double[2];
+				expParams = checker.getParams();
+				double fit[][] = new double[xFitter.length][2];
+				for(int i=0;i<xFitter.length;i++)
+				{
+					fit[i][0] = xFitter[i]*timeFrames;
+					fit[i][1] = checker.f(expParams, xFitter[i]);
+					//System.out.println("Exp: x->"+fit[0][i]+" y->"+fit[1][i]);
+				}
+				double tau=-1/expParams[1];
+				double precision=5;
+				double convertedTau=BMaths.roundDouble(tau,precision);
+				double amplitude=expParams[0];
+				double convertedAmplitude=BMaths.roundDouble(amplitude/backgroundAvg, precision);
+				try{
+					FileWriter fstream = new FileWriter("test.txt",true);
+					PrintWriter out = new PrintWriter(fstream);
+					out.println("Ajuste desde: "+maxIndex+" hasta "+maxLimit);
+					out.println(checker.getResultString());
+					out.println("gof "+gof);
+					out.close();
+				}
+				catch(Exception e){
+					System.err.println("Error: " + e.getMessage());
+				}
+				//int startMaxIncrease=maxIncreaseIndexes[0];
+			    //int endMaxIncrease=maxIncreaseIndexes[1];
+			    //double increaseRatio=-1;
+			    //if (maxIndex!=0)increaseRatio=(intensities[endMaxIncrease]-intensities[startMaxIncrease])/(endMaxIncrease-startMaxIncrease);
 			    
-			    PlotWindow.noGridLines = false;
-			    //Plot plot = new Plot("Trajectory: "+traj.getId(),"X Axis","Y Axis",completeX,completeY);
-				Plot plot = new Plot("Traj: "+id+" prob: "+(avgR2*gof)+" r2: "+avgR2+" gof: "+gof+" x: "+centerX+" y: "+centerY+" pendiente inc: "+increaseRatio,"X Axis","Y Axis",x,intensities);
-			    //Plot plot = new Plot(" x: "+centerX+" y: "+centerY,"X Axis","Y Axis",x,intensities);
-			    plot.setLimits(0, impEndFrame, 0, 255);
-			    plot.setLineWidth(1);
-			    plot.setColor(Color.red);
-			    //plot.addPoints(xFitter,yFit,PlotWindow.LINE);
-			    plot.drawLine(1, backgroundAvg, impEndFrame, backgroundAvg);
-			    plot.show();
-			    //End plotting code
-		    }
-		    
+				
+				
+				if (convertedAmplitude>=minIntensityIncrease){
+					if ((maxIndex==0 && gof>=0.85) || (maxIndex!=0 && gof>=0.75 && increaseRatio>1)){// && framesFitted<=tau){// && (maxIndex==0 || increaseRatio>10)){
+				    	System.out.println("Esto hipotéticamente es un evento de fusión :), tau: "+tau+" amp: "+amplitude);
+				    	
+				    	event=new Event(id,lastStdX,lastStdY,firstCenterX,firstCenterY,startFrame,startFrame+(int)(tau+0.5),convertedAmplitude,convertedTau,0,intensities,fit);
+				    	
+					    //this code was originally on line 1220
+					    int r1=(int)(std1+0.5);
+					    int r2=(int)(std2+0.5);
+					    double [] intensities2=new double[impEndFrame];
+					    double [] vesicleIntensities=new double[impEndFrame];
+					    int x2_1=centerX-r2;
+					    int x2_2=centerX+r2;
+					    int y2_1=centerY-r2;
+					    int y2_2=centerY+r2;
+					    double r2cuad=r2*r2;
+					    double r1cuad=r1*r1;
+					    double xaux,yaux;
+					    double sumcuad;
+					    int npixels;
+					    int vesiclenpix;
+					    for (int f=1;f<impEndFrame;f++){
+					    	npixels=0;
+					    	vesiclenpix=0;
+					    	ip=is.getProcessor(f);
+						    for (int xi=x2_1;xi<=x2_2;xi++){
+						    	for (int yi=y2_1;yi<=y2_2;yi++){
+						    		xaux=xi-centerX;
+						    		yaux=yi-centerY;
+						    		sumcuad=(xaux*xaux)+(yaux*yaux);
+						    		if (sumcuad>r1cuad && sumcuad<r2cuad ){
+						    			intensities2[f-1]=intensities2[f-1]+ip.getPixel(xi, yi);
+						    			npixels++;
+						    			//System.out.println("Pixel2 "+"xi: "+xi+" yi: "+yi);
+						    		}else{
+						    			if (sumcuad<=r1cuad){
+						    				vesicleIntensities[f-1]=vesicleIntensities[f-1]+ip.getPixel(xi, yi);
+						    				vesiclenpix++;
+						    			}
+						    		}
+						    	}
+						    }
+						    intensities2[f-1]=intensities2[f-1]/npixels;
+						    vesicleIntensities[f-1]=vesicleIntensities[f-1]/vesiclenpix;
+					    }
+					    //
+					    
+					    PlotWindow.noGridLines = false;
+					    //Plot plot = new Plot("Trajectory: "+traj.getId(),"X Axis","Y Axis",completeX,completeY);
+						Plot plot = new Plot("Traj: "+id+" prob: "+(avgR2*gof)+" r2: "+avgR2+" gof: "+gof+" x: "+centerX+" y: "+centerY+" pendiente inc: "+increaseRatio,"X Axis","Y Axis",x,intensities);
+					    //Plot plot = new Plot(" x: "+centerX+" y: "+centerY,"X Axis","Y Axis",x,intensities);
+					    plot.setLimits(0, impEndFrame, 0, 255);
+					    plot.setLineWidth(1);
+					    plot.setColor(Color.red);
+					    //plot.addPoints(xFitter,yFit,PlotWindow.LINE);
+					    plot.drawLine(1, backgroundAvg, impEndFrame, backgroundAvg);
+					    plot.show();
+					    //End plotting code
+				    }else{
+				    	System.out.println("NO ES EVENTO DE FUSION NORMAL");
+				    }
+				}
+			}
+	    }
 		    
 	    }  
 		    
 	
 	return event;
 	}	
-	}
+	//}
 	
 	public void updateAllCenterIntensities(double[] intensities, int xEvent, int yEvent){
 		ImageStack is=imp.getImageStack();
@@ -1473,5 +1600,76 @@ public class EventEvaluator{
 			ip=is.getProcessor(i);
 			intensities[i-1]=(ip.getPixel(xEvent, yEvent)+ip.getPixel(xEvent-1, yEvent)+ip.getPixel(xEvent+1,yEvent)+ip.getPixel(xEvent,yEvent-1)+ip.getPixel(xEvent, yEvent+1))/5;
 		}
+	}
+	
+	public boolean dockingTest(double[] x, double[] intensities, double maxIndex,int framesFitted, double slopeStdX, double slopeStdY){
+		int length=intensities.length;
+		double maxInt=intensities[0];
+		if (maxInt>maxIntThreshold){
+			if (framesFitted>=5 && (slopeStdX >=-0.25 && slopeStdX<=0.25) && (slopeStdY>=-0.25 && slopeStdY<=0.25)){
+				double[] smoothIntensities=new double[length];
+				for (int k=1;k<length-1;k++){
+					smoothIntensities[k]=(intensities[k-1]+2*intensities[k]+intensities[k+1])/4;
+				}
+				smoothIntensities[0]=smoothIntensities[1];
+				smoothIntensities[length-1]=smoothIntensities[length-2];
+				CurveFitter checker = new CurveFitter(x, smoothIntensities);
+				checker.doCustomFit( "y=a*x+b", new double[]{0.5,maxInt}, false);
+				
+				double gof = checker.getFitGoodness();
+				try{
+					FileWriter fstream = new FileWriter("test.txt",true);
+					PrintWriter out = new PrintWriter(fstream);
+					out.println(checker.getResultString());
+					out.println("gof "+gof);
+					out.close();
+				}catch(Exception e){
+					System.err.println("Error: " + e.getMessage());
+				}
+				double a=checker.getParams()[0];
+				//if (gof>0.1 && (a<0.5 && a>-0.5))return true;
+				if (a<0.5 && a>-0.5) return true;
+				return false;
+			}else{
+				return false;
+			}
+		}else{
+			return false;
+		}
+	}
+	
+	public int isNormalFE(int maxIndex,ArrayList<Double> stdXArray,ArrayList<Double> stdYArray,ArrayList<Double> ampArray){
+		int n1=stdXArray.size();
+		int n2=stdYArray.size();
+		if (n1!=n2) return 0;
+		double lastGaussAmp=ampArray.get(0);
+		double lastStdX=stdXArray.get(0);
+		double lastStdY=stdYArray.get(0);
+		int endPuffin=0;
+		boolean puffinBehaviour=false;
+		
+		for (int i=1;i<n1;i++){
+			double stdx=stdXArray.get(i);
+			double stdy=stdYArray.get(i);
+			double amp=ampArray.get(i);
+			if (i==1 && amp<maxIntThreshold){
+				return 0;
+			}
+			if((lastGaussAmp-amp)>-(lastGaussAmp*0.1) && (stdx-lastStdX)>-(lastStdX*0.25) && (stdy-lastStdY)>-(lastStdY*0.25)){
+				if (!puffinBehaviour)puffinBehaviour=true;
+				lastStdX=stdx;
+				lastStdY=stdy;
+				lastGaussAmp=amp;
+				endPuffin++;
+			}
+			else{
+				if (!puffinBehaviour) return 0;
+				break;
+			}
+		}
+		double slopeStdXFit=lineFitting(new ArrayList<Double>(stdXArray.subList(0, endPuffin-1)),maxIndex+1);
+	    double slopeStdYFit=lineFitting(new ArrayList<Double>(stdYArray.subList(0, endPuffin-1)),maxIndex+1);
+	    if (slopeStdXFit>0 || slopeStdYFit>0) return endPuffin;
+		return 0;
 	}
 }

@@ -42,49 +42,69 @@ public class GUI_InputParameters extends JFrame {
 	
 	private int fitPatchSize;
 	private int timeFrames;
+	private double minimumIntIncrease;
+	private JLabel lblMinimumIntensity;
+	private JSpinner minIntSpinner;
 	/**
 	 * Create the frame.
 	 */
 	public GUI_InputParameters(GUI_FusionEvents gui_fe) {
 		this.GUI_Fe=gui_fe;
-		setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
-		setBounds(100, 100, 400, 300);
+		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		setBounds(100, 100, 415, 200);
+		setResizable(false);
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
 		GridBagLayout gbl_contentPane = new GridBagLayout();
-		gbl_contentPane.columnWidths = new int[]{0, 0, 0, 0, 0, 0};
-		gbl_contentPane.rowHeights = new int[]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-		gbl_contentPane.columnWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
-		gbl_contentPane.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
+		gbl_contentPane.columnWidths = new int[]{330, 70};
+		gbl_contentPane.rowHeights = new int[]{25, 25, 25, 25, 25,25};
+		gbl_contentPane.columnWeights = new double[]{0.0, 0.0};
+		gbl_contentPane.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0};
 		contentPane.setLayout(gbl_contentPane);
 		GridBagConstraints gbc_lblSquareWindowSize = new GridBagConstraints();
 		gbc_lblSquareWindowSize.insets = new Insets(0, 0, 5, 5);
-		gbc_lblSquareWindowSize.gridx = 1;
-		gbc_lblSquareWindowSize.gridy = 2;
+		gbc_lblSquareWindowSize.gridx = 0;
+		gbc_lblSquareWindowSize.gridy = 1;
 		contentPane.add(getLblSquareWindowSize(), gbc_lblSquareWindowSize);
 		GridBagConstraints gbc_patchSizeSpinner = new GridBagConstraints();
-		gbc_patchSizeSpinner.insets = new Insets(0, 0, 5, 5);
-		gbc_patchSizeSpinner.gridx = 3;
-		gbc_patchSizeSpinner.gridy = 2;
+		gbc_patchSizeSpinner.fill = GridBagConstraints.HORIZONTAL;
+		gbc_patchSizeSpinner.insets = new Insets(0, 0, 5, 15);
+		gbc_patchSizeSpinner.gridx = 1;
+		gbc_patchSizeSpinner.gridy = 1;
+		gbc_patchSizeSpinner.insets = new Insets(0,0,0,15);
 		contentPane.add(getPatchSizeSpinner(), gbc_patchSizeSpinner);
 		GridBagConstraints gbc_lblTimeBetweenFrames = new GridBagConstraints();
 		gbc_lblTimeBetweenFrames.insets = new Insets(0, 0, 5, 5);
-		gbc_lblTimeBetweenFrames.gridx = 1;
-		gbc_lblTimeBetweenFrames.gridy = 4;
+		gbc_lblTimeBetweenFrames.gridx = 0;
+		gbc_lblTimeBetweenFrames.gridy = 2;
 		contentPane.add(getLabel_1(), gbc_lblTimeBetweenFrames);
 		GridBagConstraints gbc_timeFramesSpinner = new GridBagConstraints();
-		gbc_timeFramesSpinner.insets = new Insets(0, 0, 5, 5);
-		gbc_timeFramesSpinner.gridx = 3;
-		gbc_timeFramesSpinner.gridy = 4;
+		gbc_timeFramesSpinner.fill = GridBagConstraints.HORIZONTAL;
+		gbc_timeFramesSpinner.insets = new Insets(0, 0, 5, 15);
+		gbc_timeFramesSpinner.gridx = 1;
+		gbc_timeFramesSpinner.gridy = 2;
+		gbc_timeFramesSpinner.insets = new Insets(0,0,0,15);
 		contentPane.add(getTimeFramesSpinner(), gbc_timeFramesSpinner);
+		GridBagConstraints gbc_lblMinimumIntensity = new GridBagConstraints();
+		gbc_lblMinimumIntensity.insets = new Insets(0, 0, 5, 5);
+		gbc_lblMinimumIntensity.gridx = 0;
+		gbc_lblMinimumIntensity.gridy = 3;
+		contentPane.add(getLblMinimumIntensity(), gbc_lblMinimumIntensity);
+		GridBagConstraints gbc_minIntSpinner = new GridBagConstraints();
+		gbc_minIntSpinner.fill = GridBagConstraints.HORIZONTAL;
+		gbc_minIntSpinner.insets = new Insets(0, 0, 5, 15);
+		gbc_minIntSpinner.gridx = 1;
+		gbc_minIntSpinner.gridy = 3;
+		contentPane.add(getMinIntSpinner(), gbc_minIntSpinner);
 		GridBagConstraints gbc_startFeDetectionButton = new GridBagConstraints();
-		gbc_startFeDetectionButton.insets = new Insets(0, 0, 5, 5);
-		gbc_startFeDetectionButton.gridx = 1;
-		gbc_startFeDetectionButton.gridy = 7;
+		gbc_startFeDetectionButton.gridx = 0;
+		gbc_startFeDetectionButton.gridy = 5;
+		gbc_startFeDetectionButton.gridheight=1;
+		gbc_startFeDetectionButton.gridwidth=2;
 		contentPane.add(getStartFeDetectionButton(), gbc_startFeDetectionButton);
-		setVisible(true);
-		setTitle("FE Detector Input Parameters");
+		setVisible(false);
+		setTitle("Step 3: FE Detector Input Parameters");
 	}
 
 	private JSpinner getPatchSizeSpinner() {
@@ -114,7 +134,8 @@ public class GUI_InputParameters extends JFrame {
 			startFeDetectionButton = new JButton("Start FE Detection");
 			startFeDetectionButton.addActionListener(new ActionListener(){
 				public void actionPerformed(ActionEvent e){
-					GUI_Fe.startFeDetection(fitPatchSize,timeFrames);
+					GUI_Fe.startFeDetection(fitPatchSize,timeFrames,minimumIntIncrease);
+					setVisible(false);
 				}
 			});
 		}
@@ -129,15 +150,40 @@ public class GUI_InputParameters extends JFrame {
 	private JSpinner getTimeFramesSpinner() {
 		if (timeFramesSpinner == null) {
 			SpinnerNumberModel model = new SpinnerNumberModel(1, 1, 5000, 1);
-			timeFramesSpinner = new JSpinner();
+			timeFramesSpinner = new JSpinner(model);
 			timeFrames=(Integer)timeFramesSpinner.getValue();
 			timeFramesSpinner.addChangeListener(new ChangeListener() {
 			    @Override
 			    public void stateChanged(ChangeEvent e) {
-			        timeFrames=(Integer)patchSizeSpinner.getValue();
+			        timeFrames=(Integer)timeFramesSpinner.getValue();
 			    }
 			});
 		}
 		return timeFramesSpinner;
+	}
+	private JLabel getLblMinimumIntensity() {
+		if (lblMinimumIntensity == null) {
+			lblMinimumIntensity = new JLabel("Minimum acceptable intensity increase ");
+		}
+		return lblMinimumIntensity;
+	}
+	
+	private JSpinner getMinIntSpinner() {
+		if (minIntSpinner == null) {
+			SpinnerNumberModel model = new SpinnerNumberModel(1., 1., 100., 0.1);
+			minIntSpinner = new JSpinner(model);
+			minimumIntIncrease=(Double) minIntSpinner.getValue();
+			minIntSpinner.addChangeListener(new ChangeListener() {
+			    @Override
+			    public void stateChanged(ChangeEvent e) {
+			        minimumIntIncrease=(Double)minIntSpinner.getValue();
+			    }
+			});
+		}
+		return minIntSpinner;
+	}
+	
+	public void startParametersInput(){
+		setVisible(true);
 	}
 }

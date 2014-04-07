@@ -430,6 +430,10 @@ public class ParticleTracker
 	public TrajectoryCanvas getTrajectoryCanvas(){
 		return tc;
 	}
+	
+	public Thinker getThinker(){
+		return thinker;
+	}
 	//fin código agregado por Jordan
 
 }

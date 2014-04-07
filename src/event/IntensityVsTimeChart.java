@@ -48,7 +48,7 @@ public class IntensityVsTimeChart extends JFreeChart
 	XYLineAnnotation difT2A;
 	XYLineAnnotation intTA;
 	XYLineAnnotation intFETA;
-	XYLineAnnotation frameA;
+	XYLineAnnotation currentFrame;
 	XYLineAnnotation time_instant;
 	
 	ArrayList<IntervalMarker> eventsMarkers;
@@ -91,7 +91,7 @@ public class IntensityVsTimeChart extends JFreeChart
 		dotRenderer2.setSeriesPaint(0,Color.BLUE);
 		dotRenderer2.setDotWidth(1);
 		
-		domainAxis = new NumberAxis("Time (frames)");
+		domainAxis = new NumberAxis("Time (seconds)");
 		
 		rangeAxisI = new NumberAxis("Intensity");
 		rangeAxisI.setRange(0, 260);
@@ -164,8 +164,8 @@ public class IntensityVsTimeChart extends JFreeChart
 			if(time_instant!=null){
 				intensityPlot.addAnnotation(time_instant);
 			}else{
-				if(frameA!=null){
-					intensityPlot.addAnnotation(frameA);
+				if(currentFrame!=null){
+					intensityPlot.addAnnotation(currentFrame);
 				}
 			}
 		}
@@ -200,7 +200,7 @@ public class IntensityVsTimeChart extends JFreeChart
 	
 	public void addFit(double[][] fit)
 	{
-		XYSeries xyfit = new XYSeries("Fit");
+		XYSeries xyfit = new XYSeries("Exponential Decay Fitting");
 		clearFits();
 		for(int i=0;i < fit.length;i++)
 			xyfit.add(fit[i][0],fit[i][1]);
@@ -214,6 +214,11 @@ public class IntensityVsTimeChart extends JFreeChart
 
 	public void setTime(double[] time){
 		this.time=time;
+	}
+	
+	public void setCurrentTimeInstant(double time)
+	{
+		this.currentFrame = new XYLineAnnotation(time, 0, time, 260, new BasicStroke(), Color.RED);
 	}
 
 	

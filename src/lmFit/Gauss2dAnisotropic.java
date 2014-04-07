@@ -74,8 +74,8 @@ public class Gauss2dAnisotropic implements LMfunc{
       double[] s = new double[npts];
       double[] a = new double[2];
       //Initializing both sigma values (x and y) on 1.0
-      a[0] = 1.0;	
-      a[1] = 1.0;
+      a[0] = 1.5;	
+      a[1] = 1.5;
       xy=x;
       z=y;
       for( int i = 0; i < npts; i++ ) {

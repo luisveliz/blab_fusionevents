@@ -11,10 +11,14 @@ import gui.GUIPreferences;
 import ij.IJ;
 import ij.ImageJ;
 import ij.ImagePlus;
+import ij.ImageStack;
 import ij.gui.Plot;
 import ij.gui.PlotWindow;
 import ij.gui.Roi;
+import ij.process.ImageProcessor;
 import info.GlobalInfo;
+
+import bTools.BMaths;
 
 import java.util.ArrayList;
 
@@ -852,13 +856,17 @@ public class Thinker
  		int nFrames=fusionEvents.getEventEvaluator().getImpEndFrame();
  		double time[]=new double[nFrames];
  		Event eventSelected=fusionEvents.getEventSet().getEvent(eventIndex);
+ 		double timeFactor=fusionEvents.getSampleTime();
  		for (int i=1;i<nFrames;i++){
- 			time[i-1]=i;
+ 			time[i-1]=i*timeFactor;
  		}
- 		System.out.println("Evento de traj "+eventSelected.getId());
+ 		fusionEvents.getFusionEventsGUI().setStartTime(eventSelected.getStart()*timeFactor);
+ 		fusionEvents.getFusionEventsGUI().setInitialRadiusX(eventSelected.getRadiusX());
+ 		fusionEvents.getFusionEventsGUI().setInitialRadiusY(eventSelected.getRadiusY());
+ 		fusionEvents.getFusionEventsGUI().setEndTime(eventSelected.getEnd()*timeFactor);
  		fusionEvents.getFusionEventsGUI().getJFreeChartIntVsTime().setTime(time);
 		fusionEvents.getFusionEventsGUI().getJFreeChartIntVsTime().setMeanIntensity(eventSelected.getIntensities());
-		fusionEvents.getFusionEventsGUI().getJFreeChartIntVsTime().addFit(eventSelected.getExpFit());
+		if (eventSelected.getExpFit()!=null)fusionEvents.getFusionEventsGUI().getJFreeChartIntVsTime().addFit(eventSelected.getExpFit());
 		fusionEvents.getFusionEventsGUI().getJFreeChartIntVsTime().update();
  	}
  	
@@ -906,8 +914,59 @@ public class Thinker
  			tauArray[i]=eventSet.getEvent(i).getTau();
  		}
  		if (eventSetSize!=0){
-	        fusionEvents.getFusionEventsGUI().plotHistogram(tauArray,5);
+	        fusionEvents.getFusionEventsGUI().plotHistogram(tauArray);
 	    }
+ 	}
+ 	
+ 	public void generateStatistics(){
+ 		fusionEvents.getFusionEventsGUI().setNumberOfEvents(fusionEvents.getEventSet().getNumberOfEvents());
+ 		fusionEvents.getEventSet().updateAvgTau();
+ 		fusionEvents.getFusionEventsGUI().setAvgDuration(fusionEvents.getEventSet().getAvgTau());
+ 		fusionEvents.getEventSet().updateAvgAmplitude();
+ 		fusionEvents.getFusionEventsGUI().setAvgIncrease(fusionEvents.getEventSet().getAvgAmplitude());
+ 		fusionEvents.getFusionEventsGUI().setShortestEvent(fusionEvents.getEventSet().getMinTau());
+ 		fusionEvents.getFusionEventsGUI().setLongestEvent(fusionEvents.getEventSet().getMaxTau());
+ 		fusionEvents.getFusionEventsGUI().setMinIncrease(fusionEvents.getEventSet().getMinAmplitude());
+ 		fusionEvents.getFusionEventsGUI().setMaxIncrease(fusionEvents.getEventSet().getMaxAmplitude());
+ 		generateHistogram();
+ 	}
+ 	
+ 	public void addNonFusionedVesicle(){
+ 		Roi selectedRoi=particleTracker.trajectories_stack_window.getSelectedRoi();
+ 		if (selectedRoi!=null){
+	 		int x1=(int)(selectedRoi.getBounds().getMinX()+0.5);
+	 		int y1=(int)(selectedRoi.getBounds().getMinY()+0.5);
+	 		int x2=(int)(selectedRoi.getBounds().getMaxX()+0.5);
+	 		int y2=(int)(selectedRoi.getBounds().getMaxY()+0.5);
+	 		int arrayDim=(x2-x1+1)*(y2-y1+1);
+	 		double [] currIntArray=new double[arrayDim];
+	 		int nFrames=fusionEvents.getEventEvaluator().getImpEndFrame();
+	 		ImageStack is=getParticleTracker().getMovie().getImp().getImageStack();
+	 		ImageProcessor ip;
+	 		double maxCurrInt;
+	 		double avgNFVesicleInt=0.;
+	 		for (int i=1;i<=nFrames;i++){
+	 			int c=0;
+	 			ip=is.getProcessor(i);
+	 			for(int xi=x1;xi<x2;xi++){
+	 				for (int yi=y1;yi<y2;yi++){
+	 					currIntArray[c]=ip.getPixel(xi, yi);
+	 					c++;
+	 				}
+	 			}
+	 			maxCurrInt=BMaths.max(currIntArray);
+	 			avgNFVesicleInt=+maxCurrInt;
+	 			System.out.println("Frame: "+i+" maxInt: "+maxCurrInt);
+	 		}
+	 		
+	 		avgNFVesicleInt=avgNFVesicleInt/nFrames;
+	 		System.out.println("Avg max int: "+ avgNFVesicleInt);
+	 		
+	 		getFusionEvents().getNFVesicleGUI().addNFVesicle();
+	 		getFusionEvents().getEventEvaluator().addNonFusionedVesicle(avgNFVesicleInt);
+	 	}else{
+ 			IJ.showMessage("You must select an area that contains a non-fusioned vesicle!");
+ 		}
  	}
 	
 	

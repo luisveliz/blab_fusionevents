@@ -9,9 +9,12 @@ public class FusionEvents {
 	
 	GUI_FusionEvents gui_fusionevents;
 	GUI_InputParameters gui_input;
+	NonFusionedVesicleSelection gui_nonFusionedVesicles;
 	EventEvaluator eventEvaluator;
 	EventSet eventSet;
-	int lastEventIndex=0;
+	int currentFrame;
+	int lastEventIndex=1;
+	double sampleTime=1.;
 	
 	
 	public FusionEvents(Thinker thinker){
@@ -20,6 +23,7 @@ public class FusionEvents {
 		
 		gui_fusionevents = new GUI_FusionEvents(thinker);
 		gui_input=new GUI_InputParameters(gui_fusionevents);
+		gui_nonFusionedVesicles= new NonFusionedVesicleSelection(gui_input);
 		
 		
 		
@@ -35,27 +39,24 @@ public class FusionEvents {
 		eventEvaluator.setWindowAnalysisSize(size);
 	}
 	
-	public void fusionEvents(int fitPatchSize, int timeBetweenFrames){
+	public void fusionEvents(int fitPatchSize, int timeBetweenFrames, double minIntIncrease){
 		
-		eventEvaluator = new EventEvaluator(thinker.particleTracker.getMovie().getImp(), 4 , 25 ,1,fitPatchSize,timeBetweenFrames);
+		this.sampleTime=timeBetweenFrames/1000.0;
+		
+		eventEvaluator = new EventEvaluator(thinker.particleTracker.getMovie().getImp(), 4 , 25 ,1,fitPatchSize,sampleTime,minIntIncrease);
 		TrajSet trajSet = thinker.getSelectedSet();
 		
 		eventSet = new EventSet();
 		System.out.println("Number of trajs: "+trajSet.getNumOfTrajs());
-		//int eventIndex=0;
+
 		for(int i=0; i< trajSet.getNumOfTrajs(); i++){
 			
 			Event event = eventEvaluator.evaluateImproved(trajSet.getTraj(i));
 			if(event!=null){
-				System.out.println("Eventooooooooooooooooooooooo!!\n\n");
 				eventSet.addEvent(event);
 				System.out.println(event.getTau()+"tau evento");
-				gui_fusionevents.addRowInFETableModel(
-						new Object[]{lastEventIndex,
-									event.getTau(),event.getAmplitude()});
+				gui_fusionevents.addRowInFETableModel(new Object[]{lastEventIndex,event.getTau(),event.getAmplitude()});
 				lastEventIndex++;
-				
-				
 			}
 			
 			
@@ -92,8 +93,27 @@ public class FusionEvents {
 		return gui_fusionevents;
 	}
 	
+	public NonFusionedVesicleSelection getNFVesicleGUI(){
+		return gui_nonFusionedVesicles;
+	}
+	
 	public EventEvaluator getEventEvaluator(){
 		return eventEvaluator;
+	}
+	
+	public double getSampleTime(){
+		return sampleTime;
+	}
+	
+	public void setCurrentFrame(int frame){
+		currentFrame=frame;
+		boolean visible=this.getFusionEventsGUI().isVisible();
+		if (visible){
+			if (this.getFusionEventsGUI().getSelectedRow()>-1){
+				this.getFusionEventsGUI().getCurrentIntVsTimeChart().setCurrentTimeInstant(currentFrame*sampleTime);
+				this.getFusionEventsGUI().getCurrentIntVsTimeChart().update();
+			}
+		}
 	}
 	
 

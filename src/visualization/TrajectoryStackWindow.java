@@ -109,7 +109,10 @@ public class TrajectoryStackWindow extends StackWindow implements ActionListener
     public synchronized void adjustmentValueChanged(AdjustmentEvent e)
     {
     	super.adjustmentValueChanged(e);
-    	((TrajectoryCanvas)getCanvas()).setLastFrame(this.slice);
+    	if (this.slice!=0){
+	    	((TrajectoryCanvas)getCanvas()).setLastFrame(this.slice);
+	    	particleTracker.getThinker().getFusionEvents().setCurrentFrame(this.slice);
+    	}
     }
     
     public synchronized void mouseReleased(MouseEvent e){
