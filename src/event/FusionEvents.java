@@ -1,5 +1,7 @@
 package event;
 
+import java.util.ArrayList;
+
 import data.TrajSet;
 import main.Thinker;
 
@@ -9,7 +11,8 @@ public class FusionEvents {
 	
 	GUI_FusionEvents gui_fusionevents;
 	GUI_InputParameters gui_input;
-	NonFusionedVesicleSelection gui_nonFusionedVesicles;
+	GUI_NFVesicleSelection gui_nonFusionedVesicles;
+	GUI_EnsurePreprocessing gui_ensurePreprocessing;
 	EventEvaluator eventEvaluator;
 	EventSet eventSet;
 	int currentFrame;
@@ -23,14 +26,15 @@ public class FusionEvents {
 		
 		gui_fusionevents = new GUI_FusionEvents(thinker);
 		gui_input=new GUI_InputParameters(gui_fusionevents);
-		gui_nonFusionedVesicles= new NonFusionedVesicleSelection(gui_input);
+		gui_nonFusionedVesicles= new GUI_NFVesicleSelection(gui_input);
+		gui_ensurePreprocessing= new GUI_EnsurePreprocessing(gui_nonFusionedVesicles);
 		
 		
 		
 		
 	}
 	public void openGUI(){
-		
+		gui_ensurePreprocessing.setVisible(true);
 	}
 	
 
@@ -39,11 +43,11 @@ public class FusionEvents {
 		eventEvaluator.setWindowAnalysisSize(size);
 	}
 	
-	public void fusionEvents(int fitPatchSize, int timeBetweenFrames, double minIntIncrease){
+	public void fusionEvents(int fitPatchSize, int timeBetweenFrames, double minIntIncrease, ArrayList<Double> nonFusionedVesicles){
 		
 		this.sampleTime=timeBetweenFrames/1000.0;
 		
-		eventEvaluator = new EventEvaluator(thinker.particleTracker.getMovie().getImp(), 4 , 25 ,1,fitPatchSize,sampleTime,minIntIncrease);
+		eventEvaluator = new EventEvaluator(thinker.particleTracker.getMovie().getImp(), 4 , 25 ,1,fitPatchSize,sampleTime,minIntIncrease,nonFusionedVesicles);
 		TrajSet trajSet = thinker.getSelectedSet();
 		
 		eventSet = new EventSet();
@@ -55,7 +59,12 @@ public class FusionEvents {
 			if(event!=null){
 				eventSet.addEvent(event);
 				System.out.println(event.getTau()+"tau evento");
-				gui_fusionevents.addRowInFETableModel(new Object[]{lastEventIndex,event.getTau(),event.getAmplitude()});
+				if (event.getTau()!=0 && event.getTMean()!=0){
+					gui_fusionevents.addRowInFETableModel(new Object[]{lastEventIndex,Double.toString(event.getTau()),Double.toString(event.getAmplitude()),Double.toString(event.getTMean())});
+				}
+				else{
+					gui_fusionevents.addRowInFETableModel(new Object[]{lastEventIndex,"-",Double.toString(event.getAmplitude()),"-"});
+				}
 				lastEventIndex++;
 			}
 			
@@ -93,7 +102,11 @@ public class FusionEvents {
 		return gui_fusionevents;
 	}
 	
-	public NonFusionedVesicleSelection getNFVesicleGUI(){
+	public GUI_InputParameters getInputParameters(){
+		return gui_input;
+	}
+	
+	public GUI_NFVesicleSelection getNFVesicleGUI(){
 		return gui_nonFusionedVesicles;
 	}
 	

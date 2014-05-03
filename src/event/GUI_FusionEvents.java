@@ -1,6 +1,8 @@
 package event;
 
 
+import ij.IJ;
+
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.ListSelectionModel;
@@ -42,6 +44,7 @@ import javax.swing.JLabel;
 import javax.swing.border.LineBorder;
 
 import java.awt.Color;
+import java.util.ArrayList;
 
 import javax.swing.SpinnerModel;
 import javax.swing.SpinnerNumberModel;
@@ -85,7 +88,7 @@ public class GUI_FusionEvents extends JFrame {
 	private JTextArea lblStatisticsInfo;
 	private JTextArea lblNumClasses;
 	private JSpinner numberClassesSpinner;
-	private JButton btnNewButton;
+	private JButton btnGenStatistics;
 	private JSplitPane splitPane;
 	private JPanel panel_generalStats;
 	private JPanel panel_dataHistogram;
@@ -110,6 +113,8 @@ public class GUI_FusionEvents extends JFrame {
 	private JLabel initialRadiusX;
 	private JLabel initialRadiusY;
 	private JButton btnStartManualSearch;
+	
+	private ChartPanel cp=null;
 
 
 	/**
@@ -265,9 +270,9 @@ public class GUI_FusionEvents extends JFrame {
 		return (IntensityVsTimeChart) cp_intVsTime.getChart();
 	}
 	
-	public void startFeDetection(int fitPatchSize, int timeBetweenFrames,double minIntIncrease){
-		
-		thinker.getFusionEvents().fusionEvents(fitPatchSize,timeBetweenFrames,minIntIncrease);
+	public void startFeDetection(int fitPatchSize, int timeBetweenFrames,double minIntIncrease,ArrayList<Double> NFVesicles){
+		IJ.log("Empecé la detección de eventos");
+		thinker.getFusionEvents().fusionEvents(fitPatchSize,timeBetweenFrames,minIntIncrease,NFVesicles);
 		setVisible(true);
 		
 	}
@@ -292,7 +297,7 @@ public class GUI_FusionEvents extends JFrame {
 	
 	public void plotHistogram(double[] dataArray){
 		   HistogramDataset dataset = new HistogramDataset();
-	       dataset.setType(HistogramType.RELATIVE_FREQUENCY);
+	       dataset.setType(HistogramType.FREQUENCY);
 	       dataset.addSeries("Tau Histogram",dataArray,nClassesHistogram);
 	       String plotTitle = "Tau Histogram"; 
 	       String xaxis = "Tau";
@@ -303,16 +308,23 @@ public class GUI_FusionEvents extends JFrame {
 	       boolean urls = false; 
 	       JFreeChart chart = ChartFactory.createHistogram( plotTitle, xaxis, yaxis, 
 	                dataset, orientation, show, toolTips, urls);
-	       GridBagConstraints gbc= new GridBagConstraints();
-		   gbc.gridx = 0;
-		   gbc.gridy = 0;
-	       ChartPanel cp=new ChartPanel(chart);
-	       gbc.gridheight=1;
-	       gbc.gridwidth=1;
-	       gbc.fill=GridBagConstraints.BOTH;
-	       cp.setPreferredSize(new Dimension(250,150));
-	       panel_dataHistogram.add(cp,gbc);
-	       panel_dataHistogram.setVisible(true);
+	       if (cp==null){
+	    	   GridBagConstraints gbc= new GridBagConstraints();
+			   gbc.gridx = 0;
+			   gbc.gridy = 0;
+		       gbc.gridheight=1;
+		       gbc.gridwidth=1;
+		       gbc.fill=GridBagConstraints.BOTH;
+			   panel_dataHistogram.removeAll();
+			   cp=new ChartPanel(chart);
+			   panel_dataHistogram.add(cp,gbc);
+			   cp.setSize(cp.getParent().getSize());
+			   panel_dataHistogram.setVisible(true);
+		   }
+	       else{
+	    	   cp.setChart(chart);
+	       }
+           
 	}
 	
 	private JPanel getPanel_info() {
@@ -442,12 +454,12 @@ public class GUI_FusionEvents extends JFrame {
 			gbc_numberClassesSpinner.gridx = 1;
 			gbc_numberClassesSpinner.gridy = 1;
 			panel_histogram.add(getNumberClassesSpinner(), gbc_numberClassesSpinner);
-			GridBagConstraints gbc_btnNewButton = new GridBagConstraints();
-			gbc_btnNewButton.insets = new Insets(0, 0, 5, 0);
-			gbc_btnNewButton.anchor = GridBagConstraints.BASELINE;
-			gbc_btnNewButton.gridx = 2;
-			gbc_btnNewButton.gridy = 1;
-			panel_histogram.add(getBtnNewButton(), gbc_btnNewButton);
+			GridBagConstraints gbc_btnGenStatistics = new GridBagConstraints();
+			gbc_btnGenStatistics.insets = new Insets(0, 0, 5, 0);
+			gbc_btnGenStatistics.anchor = GridBagConstraints.BASELINE;
+			gbc_btnGenStatistics.gridx = 2;
+			gbc_btnGenStatistics.gridy = 1;
+			panel_histogram.add(getBtnGenStatistics(), gbc_btnGenStatistics);
 			GridBagConstraints gbc_splitPane = new GridBagConstraints();
 			gbc_splitPane.anchor = GridBagConstraints.FIRST_LINE_START;
 			gbc_splitPane.insets = new Insets(0, 0, 0, 5);
@@ -615,16 +627,16 @@ public class GUI_FusionEvents extends JFrame {
 		}
 		return numberClassesSpinner;
 	}
-	private JButton getBtnNewButton() {
-		if (btnNewButton == null) {
-			btnNewButton = new JButton("Generate Statistics");
-			btnNewButton.addActionListener(new ActionListener() {
+	private JButton getBtnGenStatistics() {
+		if (btnGenStatistics == null) {
+			btnGenStatistics = new JButton("Generate Statistics");
+			btnGenStatistics.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
 					thinker.generateStatistics();
 				}
 			});
 		}
-		return btnNewButton;
+		return btnGenStatistics;
 	}
 	private JSplitPane getSplitPane() {
 		if (splitPane == null) {
@@ -735,6 +747,12 @@ public class GUI_FusionEvents extends JFrame {
 	private JPanel getPanel_dataHistogram() {
 		if (panel_dataHistogram == null) {
 			panel_dataHistogram = new JPanel();
+			GridBagLayout gbl_panel_dataHistogram = new GridBagLayout();
+			gbl_panel_dataHistogram.columnWidths = new int[]{0};
+			gbl_panel_dataHistogram.rowHeights = new int[]{0};
+			gbl_panel_dataHistogram.columnWeights = new double[]{Double.MIN_VALUE};
+			gbl_panel_dataHistogram.rowWeights = new double[]{Double.MIN_VALUE};
+			panel_dataHistogram.setLayout(gbl_panel_dataHistogram);
 		}
 		return panel_dataHistogram;
 	}
@@ -925,5 +943,9 @@ public class GUI_FusionEvents extends JFrame {
 			btnStartManualSearch.setPreferredSize(new Dimension(175,100));
 		}
 		return btnStartManualSearch;
+	}
+	
+	public Thinker getThinker(){
+		return thinker;
 	}
 }

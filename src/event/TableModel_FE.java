@@ -49,11 +49,11 @@ public class TableModel_FE extends DefaultTableModel/*AbstractTableModel*/ imple
 			case 0:			
 				return Number.class;
 			case 1:			
-				return Number.class;
+				return String.class;
 			case 2:			
-				return Number.class;
+				return String.class;
 			case 3:			
-				return Number.class;
+				return String.class;
 			default:
 				return getValueAt(0, columnIndex).getClass();				
 		}

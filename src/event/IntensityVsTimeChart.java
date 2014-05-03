@@ -5,6 +5,7 @@ import java.awt.Color;
 import java.util.ArrayList;
 
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.LegendItemSource;
 import org.jfree.chart.annotations.XYLineAnnotation;
 import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.axis.ValueAxis;
@@ -15,6 +16,7 @@ import org.jfree.chart.plot.SeriesRenderingOrder;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYDotRenderer;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
+import org.jfree.chart.title.LegendTitle;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 	
@@ -26,8 +28,11 @@ public class IntensityVsTimeChart extends JFreeChart
 	XYSeries intensity;
 	XYSeriesCollection intensityC;
 	
-	ArrayList<XYSeries> intensityFit;
+	XYSeries intensityFit;
 	XYSeriesCollection intensityFitC;
+	
+	XYSeries tmeanFit;
+	XYSeriesCollection tmeanFitC;
 	
 	final ValueAxis rangeAxisI;
 	
@@ -40,7 +45,8 @@ public class IntensityVsTimeChart extends JFreeChart
 	XYDotRenderer dotRenderer2;
 	XYDotRenderer dotRendererDif;
 	
-	XYLineAndShapeRenderer lineRenderer;
+	XYLineAndShapeRenderer lineRenderer1;
+	XYLineAndShapeRenderer lineRenderer2;
 	
 	final ValueAxis domainAxis;
 	
@@ -50,11 +56,13 @@ public class IntensityVsTimeChart extends JFreeChart
 	XYLineAnnotation intFETA;
 	XYLineAnnotation currentFrame;
 	XYLineAnnotation time_instant;
+	XYLineAnnotation maxIncrease;
+	XYLineAnnotation tMean;
 	
 	ArrayList<IntervalMarker> eventsMarkers;
 	
 	boolean showFrame, showDifT, showIntT, showFET, showIntensity, showGaussX, showGaussY, showFE, showFit;
-	
+	boolean showIncrease=true;
 	XYPlot intensityPlot;
 	XYPlot difPlot;
 
@@ -76,9 +84,10 @@ public class IntensityVsTimeChart extends JFreeChart
 		intensity = new XYSeries("Intensity");
 		intensityC = new XYSeriesCollection(intensity);
 
+		tmeanFit=new XYSeries("Graphics TMean");
+		tmeanFitC=new XYSeriesCollection();
 		
-//		intensityFit = new XYSeries("ExpFit");
-		intensityFit = new ArrayList<XYSeries>();
+		intensityFit = new XYSeries("ExpFit");
 		intensityFitC = new XYSeriesCollection();
 		
 		dotRenderer0 = new XYDotRenderer();
@@ -96,37 +105,26 @@ public class IntensityVsTimeChart extends JFreeChart
 		rangeAxisI = new NumberAxis("Intensity");
 		rangeAxisI.setRange(0, 260);
 		
-		lineRenderer = new XYLineAndShapeRenderer();
-		lineRenderer.setSeriesShapesVisible(0, false);
-		lineRenderer.setSeriesPaint(0, Color.BLACK);
+		lineRenderer1 = new XYLineAndShapeRenderer();
+		lineRenderer1.setSeriesShapesVisible(0, false);
+		lineRenderer1.setSeriesPaint(0, Color.BLACK);
+		
+		lineRenderer2 = new XYLineAndShapeRenderer();
 		
 		intensityPlot.setRangeAxis(rangeAxisI);
 		intensityPlot.setRenderer(0,dotRenderer0);
 		intensityPlot.setRenderer(1,dotRenderer1);
 		intensityPlot.setRenderer(2,dotRenderer2);
-		intensityPlot.setRenderer(3,lineRenderer);
+		intensityPlot.setRenderer(3,lineRenderer1);
+		intensityPlot.setRenderer(4,lineRenderer2);
 		
 		intensityPlot.setDataset(0,intensityC);
 		intensityPlot.setDataset(3,intensityFitC);
+		intensityPlot.setDataset(4,tmeanFitC);
 		
 		intensityPlot.setSeriesRenderingOrder(SeriesRenderingOrder.FORWARD);
 		intensityPlot.setDatasetRenderingOrder(DatasetRenderingOrder.FORWARD);
 		
-//		dif = new XYSeries("|uX-uY|");
-//		difC = new XYSeriesCollection(dif);
-//		rangeAxisD = new NumberAxis("|uX-uY|");
-//		rangeAxisD.setRange(-100, 100);
-//		dotRendererDif = new XYDotRenderer();
-//		dotRendererDif.setSeriesPaint(0,Color.BLACK);
-//		dotRendererDif.setDotWidth(2);
-//
-//		difPlot.setDataset(difC);
-//		difPlot.setRangeAxis(rangeAxisD);
-//		difPlot.setRenderer(dotRendererDif);
-//		difPlot.setSeriesRenderingOrder(SeriesRenderingOrder.FORWARD);
-//		difPlot.setDatasetRenderingOrder(DatasetRenderingOrder.FORWARD);
-		
-//		((CombinedDomainXYPlot) this.getPlot()).add(difPlot);
 		((CombinedDomainXYPlot) this.getPlot()).add(intensityPlot);
 		((CombinedDomainXYPlot) this.getPlot()).setDomainAxis(domainAxis);
 		((CombinedDomainXYPlot) this.getPlot()).setSeriesRenderingOrder(SeriesRenderingOrder.FORWARD);
@@ -134,30 +132,39 @@ public class IntensityVsTimeChart extends JFreeChart
 		
 		this.setAntiAlias(true);
 	}
+	
+	public void setShowFit(boolean bool){
+		showFit=bool;
+	}
+	
 	public void update()
 	{
-		System.out.println("Hola entre a update");
 //		difC.removeAllSeries();
 //		difC.addSeries(dif);
 		intensityC.removeAllSeries();
+		intensityPlot.clearAnnotations();
+		
 		if(showIntensity)intensityC.addSeries(intensity);
 		intensityFitC.removeAllSeries();
-		if(showFit)
-			for(int i=0;i<intensityFit.size();i++)
-			{
-				intensityFitC.addSeries(intensityFit.get(i));
-				lineRenderer.setSeriesShapesVisible(i, false);
-				lineRenderer.setSeriesPaint(i, Color.GREEN);
-			}
+		tmeanFitC.removeAllSeries();
+		if(showFit){
+				intensityFit.setKey("Increase and Exp Decay Fit");
+				intensityFitC.addSeries(intensityFit);
+				intensityPlot.setDataset(3,intensityFitC);
+				lineRenderer1.setSeriesPaint(0, Color.GREEN);
+				tmeanFitC.addSeries(tmeanFit);
+				intensityPlot.setDataset(4,tmeanFitC);
+				lineRenderer2.setSeriesPaint(0, Color.BLUE);
+				//intensityPlot.addAnnotation(tMean);
+		}else{
+			intensityFit.setKey("Increase fit");
+			intensityFitC.addSeries(intensityFit);
+			intensityPlot.setDataset(3,intensityFitC);
+			lineRenderer1.setSeriesPaint(0, Color.GREEN);
+			
+		}
 		
 		
-//		difPlot.clearAnnotations();
-//		if(showDifT)
-//		{
-//			difPlot.addAnnotation(annotations[0]);
-//			difPlot.addAnnotation(annotations[1]);
-//		}
-		intensityPlot.clearAnnotations();
 		if(showIntT && intTA!=null)intensityPlot.addAnnotation(intTA);
 		
 		if (showFrame){
@@ -169,6 +176,9 @@ public class IntensityVsTimeChart extends JFreeChart
 				}
 			}
 		}
+		//if (showIncrease){
+			//intensityPlot.addAnnotation(maxIncrease);
+		//}
 		
 		if(showFET && intFETA!=null)intensityPlot.addAnnotation(intFETA);
 		
@@ -200,11 +210,13 @@ public class IntensityVsTimeChart extends JFreeChart
 	
 	public void addFit(double[][] fit)
 	{
-		XYSeries xyfit = new XYSeries("Exponential Decay Fitting");
-		clearFits();
-		for(int i=0;i < fit.length;i++)
-			xyfit.add(fit[i][0],fit[i][1]);
-		intensityFit.add(xyfit);
+		if (fit!=null){
+			intensityFit = new XYSeries("Event Increase and Exp Decay Fit");
+			for(int i=0;i < fit.length;i++)
+				intensityFit.add(fit[i][0],fit[i][1]);
+		}else{
+			clearFits();
+		}
 	}
 	
 	public void clearFits()
@@ -220,6 +232,23 @@ public class IntensityVsTimeChart extends JFreeChart
 	{
 		this.currentFrame = new XYLineAnnotation(time, 0, time, 260, new BasicStroke(), Color.RED);
 	}
-
+	
+	public void setMaxIncrease(int start, int end, double startInt, double endInt, double timeFactor){
+		if (!showFit){
+			intensityFit.clear();
+			intensityPlot.setDataset(1,null);
+		}
+		intensityFit.add(start*timeFactor,startInt);
+		intensityFit.add(end*timeFactor,endInt);
+		//this.maxIncrease = new XYLineAnnotation(start*timeFactor, startInt, end*timeFactor, endInt, new BasicStroke(), Color.GREEN);
+		//System.out.println("start: "+start+" startInt: "+startInt+" end: "+end+" endInt: "+endInt);
+	}
+	
+	public void setTMean(double firstInstTMean, double secondInstTMean, double firstInt, double secondInt){
+		tmeanFit.clear();
+		tmeanFit.add(firstInstTMean,firstInt);
+		tmeanFit.add(secondInstTMean,secondInt);
+		//this.tMean = new XYLineAnnotation(firstInstTMean,firstInt,secondInstTMean,secondInt,new BasicStroke(), Color.BLUE);
+	}
 	
 }

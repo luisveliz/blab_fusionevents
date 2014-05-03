@@ -1,5 +1,7 @@
 package event;
 
+import bTools.BMaths;
+
 public class Event{
 	
 	private int id;
@@ -11,11 +13,12 @@ public class Event{
 	private int centerY;
 	private double amplitude;
 	private double tau;
-	private double tmean;//Duda: ¿estos datos se manejaran como frames(int) o como tiempo(double) directamente?
+	private double[] tmeanData;//Duda: ¿estos datos se manejaran como frames(int) o como tiempo(double) directamente?
 	private double intensities[];
 	private double expFit[][];
+	private int increaseData[];
 	
-	public Event(int id,double eventRadiusX, double eventRadiusY, int centerX, int centerY, int start, int end, double amplitude, double tau, double tmean, double[] intensities, double[][] expFit){
+	public Event(int id,double eventRadiusX, double eventRadiusY, int centerX, int centerY, int start, int end, double amplitude, double tau, double[] tmeanData, double[] intensities, double[][] expFit, int[] increaseData){
 		this.id=id;
 		this.eventRadiusX=eventRadiusX;
 		this.eventRadiusY=eventRadiusY;
@@ -25,9 +28,10 @@ public class Event{
 		this.end=end;
 		this.amplitude=amplitude;
 		this.tau=tau;
-		this.tmean=tmean;
+		this.tmeanData=tmeanData;
 		this.intensities=intensities;
 		this.expFit=expFit;
+		this.increaseData=increaseData;
 		
 	}
 	public int getId(){
@@ -59,7 +63,15 @@ public class Event{
 	}
 	
 	public double getTMean(){
-		return tmean;
+		if (tmeanData!=null){
+			return BMaths.roundDouble(tmeanData[1]-tmeanData[0],4);
+		}else{
+			return 0;
+		}
+	}
+	
+	public double [] getTMeanData(){
+		return tmeanData;
 	}
 	
 	public int getCenterX(){
@@ -76,6 +88,10 @@ public class Event{
 	
 	public double[][] getExpFit(){
 		return expFit;
+	}
+	
+	public int[] getMaxIncrease(){
+		return increaseData;
 	}
 	
 }

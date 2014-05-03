@@ -23,6 +23,9 @@ import javax.swing.JLabel;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.FileWriter;
+import java.io.PrintWriter;
+import java.util.ArrayList;
 
 import javax.swing.JButton;
 
@@ -43,12 +46,14 @@ public class GUI_InputParameters extends JFrame {
 	private int fitPatchSize;
 	private int timeFrames;
 	private double minimumIntIncrease;
+	private ArrayList<Double> nonFusionedIntArray;
 	private JLabel lblMinimumIntensity;
 	private JSpinner minIntSpinner;
 	/**
 	 * Create the frame.
 	 */
 	public GUI_InputParameters(GUI_FusionEvents gui_fe) {
+		nonFusionedIntArray=new ArrayList<Double>();
 		this.GUI_Fe=gui_fe;
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 415, 200);
@@ -109,7 +114,7 @@ public class GUI_InputParameters extends JFrame {
 
 	private JSpinner getPatchSizeSpinner() {
 		if (patchSizeSpinner == null) {
-			SpinnerNumberModel model = new SpinnerNumberModel(3, 3, 15, 2);
+			SpinnerNumberModel model = new SpinnerNumberModel(3, 3, 99, 2);
 			patchSizeSpinner = new JSpinner(model);
 			fitPatchSize=(Integer)patchSizeSpinner.getValue();
 			patchSizeSpinner.addChangeListener(new ChangeListener() {
@@ -134,7 +139,15 @@ public class GUI_InputParameters extends JFrame {
 			startFeDetectionButton = new JButton("Start FE Detection");
 			startFeDetectionButton.addActionListener(new ActionListener(){
 				public void actionPerformed(ActionEvent e){
-					GUI_Fe.startFeDetection(fitPatchSize,timeFrames,minimumIntIncrease);
+					try{
+				    	FileWriter fstream = new FileWriter("test.txt",true);
+						PrintWriter out = new PrintWriter(fstream);
+						out.println("empecé a trabajar");
+						out.close();
+				    }catch(Exception ev){
+						System.err.println("Error: " + ev.getMessage());
+				    }
+					GUI_Fe.startFeDetection(fitPatchSize,timeFrames,minimumIntIncrease,nonFusionedIntArray);
 					setVisible(false);
 				}
 			});
@@ -185,5 +198,13 @@ public class GUI_InputParameters extends JFrame {
 	
 	public void startParametersInput(){
 		setVisible(true);
+	}
+	
+	public GUI_FusionEvents getGUI_FE(){
+		return GUI_Fe;
+	}
+	
+	public void addNonFusionedVesicle(double avgVesicleInt){
+		nonFusionedIntArray.add(avgVesicleInt);
 	}
 }

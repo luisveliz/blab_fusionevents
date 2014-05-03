@@ -860,13 +860,36 @@ public class Thinker
  		for (int i=1;i<nFrames;i++){
  			time[i-1]=i*timeFactor;
  		}
+ 		
+ 		
  		fusionEvents.getFusionEventsGUI().setStartTime(eventSelected.getStart()*timeFactor);
  		fusionEvents.getFusionEventsGUI().setInitialRadiusX(eventSelected.getRadiusX());
  		fusionEvents.getFusionEventsGUI().setInitialRadiusY(eventSelected.getRadiusY());
  		fusionEvents.getFusionEventsGUI().setEndTime(eventSelected.getEnd()*timeFactor);
  		fusionEvents.getFusionEventsGUI().getJFreeChartIntVsTime().setTime(time);
 		fusionEvents.getFusionEventsGUI().getJFreeChartIntVsTime().setMeanIntensity(eventSelected.getIntensities());
-		if (eventSelected.getExpFit()!=null)fusionEvents.getFusionEventsGUI().getJFreeChartIntVsTime().addFit(eventSelected.getExpFit());
+		if (eventSelected.getTau()==0 && eventSelected.getTMean()==0){
+			fusionEvents.getFusionEventsGUI().getJFreeChartIntVsTime().setShowFit(false);
+		}else{
+			fusionEvents.getFusionEventsGUI().getJFreeChartIntVsTime().setShowFit(true);
+		}
+		fusionEvents.getFusionEventsGUI().getJFreeChartIntVsTime().addFit(eventSelected.getExpFit());
+		
+		
+		
+		//Draw the rect that represents the max increase of the intensity
+		int[] increaseData=eventSelected.getMaxIncrease();
+		int start=increaseData[0];
+		int end=increaseData[1];
+		double[] tMeanData=eventSelected.getTMeanData();
+		if (tMeanData!=null){
+			double x1=tMeanData[0]*timeFactor;
+			double x2=tMeanData[1]*timeFactor;
+			double y1=tMeanData[2];
+			double y2=tMeanData[3];
+			fusionEvents.getFusionEventsGUI().getJFreeChartIntVsTime().setTMean(x1,x2,y1,y2);
+		}
+		fusionEvents.getFusionEventsGUI().getJFreeChartIntVsTime().setMaxIncrease(start, end, eventSelected.getIntensities()[start], eventSelected.getIntensities()[end],timeFactor);
 		fusionEvents.getFusionEventsGUI().getJFreeChartIntVsTime().update();
  	}
  	
@@ -913,8 +936,10 @@ public class Thinker
  		for (int i=0;i<eventSetSize;i++){
  			tauArray[i]=eventSet.getEvent(i).getTau();
  		}
- 		if (eventSetSize!=0){
+ 		if (eventSetSize>1){
 	        fusionEvents.getFusionEventsGUI().plotHistogram(tauArray);
+	    }else{
+	    	IJ.showMessage("There must be at least 2 events to plot an histogram");
 	    }
  	}
  	
@@ -940,30 +965,59 @@ public class Thinker
 	 		int y2=(int)(selectedRoi.getBounds().getMaxY()+0.5);
 	 		int arrayDim=(x2-x1+1)*(y2-y1+1);
 	 		double [] currIntArray=new double[arrayDim];
-	 		int nFrames=fusionEvents.getEventEvaluator().getImpEndFrame();
+	 		int nFrames=getParticleTracker().getMovie().getImp().getNFrames();
 	 		ImageStack is=getParticleTracker().getMovie().getImp().getImageStack();
 	 		ImageProcessor ip;
+	 		double [] maxIntArray=new double[nFrames];
 	 		double maxCurrInt;
-	 		double avgNFVesicleInt=0.;
+	 		double maxIntNFVesicleInt=0.;
+	 		int x1aux,x2aux,y1aux,y2aux;
 	 		for (int i=1;i<=nFrames;i++){
 	 			int c=0;
 	 			ip=is.getProcessor(i);
 	 			for(int xi=x1;xi<x2;xi++){
 	 				for (int yi=y1;yi<y2;yi++){
-	 					currIntArray[c]=ip.getPixel(xi, yi);
+	 					if (xi-1<x1){
+	 						x1aux=x1;
+	 					}else{
+	 						x1aux=xi-1;
+	 					}
+	 					if (xi+1>x2){
+	 						x2aux=x2;
+	 					}else{
+	 						x2aux=xi+1;
+	 					}
+	 					if (yi-1<y1){
+	 						y1aux=y1;
+	 					}else{
+	 						y1aux=yi-1;
+	 					}
+	 					if (yi+1>y2){
+	 						y2aux=y2;
+	 					}else{
+	 						y2aux=yi+1;
+	 					}
+	 					int d=0;
+	 					for (int a=x1aux;a<x2aux;a++){
+	 						for (int b=y1aux;b<y2aux;b++){
+	 							currIntArray[c]=currIntArray[c]+ip.getPixel(a, b);
+	 							d++;
+	 						}
+	 					}
+	 					currIntArray[c]=currIntArray[c]/d;
 	 					c++;
 	 				}
 	 			}
 	 			maxCurrInt=BMaths.max(currIntArray);
-	 			avgNFVesicleInt=+maxCurrInt;
+	 			maxIntArray[i-1]=maxCurrInt;
 	 			System.out.println("Frame: "+i+" maxInt: "+maxCurrInt);
 	 		}
-	 		
-	 		avgNFVesicleInt=avgNFVesicleInt/nFrames;
-	 		System.out.println("Avg max int: "+ avgNFVesicleInt);
+	 		maxIntNFVesicleInt=BMaths.max(maxIntArray);
+	 		System.out.println("Threshold added: "+ maxIntNFVesicleInt+" nFRames: "+nFrames);
 	 		
 	 		getFusionEvents().getNFVesicleGUI().addNFVesicle();
-	 		getFusionEvents().getEventEvaluator().addNonFusionedVesicle(avgNFVesicleInt);
+	 		getFusionEvents().getInputParameters().addNonFusionedVesicle(maxIntNFVesicleInt);
+	
 	 	}else{
  			IJ.showMessage("You must select an area that contains a non-fusioned vesicle!");
  		}
